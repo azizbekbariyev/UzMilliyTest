@@ -15,12 +15,10 @@ async function start() {
     );
 
     const allowedOrigins = [
-      "https://uz-milliy-front-1.vercel.app",
+      "https://https://uz-milliy-front.vercel.app/",
       "http://localhost:5173",
       "https://web.telegram.org",
       "https://telegram.org",
-      "https://uz-milliy-front-1.vercel.app",
-      // Telegram Mini App uchun
     ];
 
     app.enableCors({

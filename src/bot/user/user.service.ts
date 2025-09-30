@@ -24,7 +24,7 @@ export class UserService {
             [
                 {
                     text: "Testni boshlash",
-                    web_app: { url: "https://uz-milliy-front-1.vercel.app" }
+                    web_app: { url: "https://https://uz-milliy-front.vercel.app/" }
                 }
             ],  
             [
