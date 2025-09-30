@@ -13,4 +13,7 @@ export class User {
         unique: true
     })
     id_telegram: number
+
+    @Column()
+    token: string
 }

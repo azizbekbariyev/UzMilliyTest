@@ -11,6 +11,7 @@ import { TestAnswer } from "./models/test_answer";
 import { Test } from "./models/test.model";
 import * as ExcelJS from "exceljs";
 import * as path from "path";
+import { randomBytes } from "crypto";
 
 @Injectable()
 export class BotService {
@@ -25,6 +26,10 @@ export class BotService {
     @InjectRepository(Test)
     private readonly testRepository: Repository<Test>
   ) {}
+
+  generateToken(length = 32) {
+    return randomBytes(length).toString("hex");
+  }
 
   async start(ctx: MyContext) {
     const admin = process.env.ADMIN;
@@ -68,6 +73,12 @@ export class BotService {
           if (!user) {
             await ctx.reply("Iltimos, ismingiz va familiyangizni kiriting:");
           } else {
+            const token = this.generateToken();
+            await this.userRepository.update(
+              { id_telegram: userId },
+              { token: token }
+            );
+            const webAppUrl = `https://uz-milliy-front-1.vercel.app?token=${token}`;
             await ctx.replyWithHTML(
               `Assalomu alaykum! 👋 ${ctx.from?.first_name}\n📋 Test ishlash uchun pastdagi tugmani bosing:`,
               {
@@ -77,7 +88,7 @@ export class BotService {
                       {
                         text: "Testni boshlash",
                         web_app: {
-                          url: "https://uz-milliy-front-1.vercel.app",
+                          url: webAppUrl,
                         },
                       },
                     ],
@@ -283,37 +294,12 @@ export class BotService {
         });
       }
     } else {
-      await ctx.replyWithHTML(
-        `Assalomu alaykum! 👋 ${ctx.from?.first_name}\n📋 Test ishlash uchun pastdagi tugmani bosing:`,
-        {
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "Testni boshlash",
-                  web_app: { url: "https://uz-milliy-front-1.vercel.app" },
-                },
-              ],
-              [
-                {
-                  text: "Natijani ko'rish",
-                  callback_data: "result",
-                },
-                {
-                  text: "Test tahlili",
-                  callback_data: "analysis",
-                },
-              ],
-              [
-                {
-                  text: "Ismingizni o'zgartirish",
-                  callback_data: "change_name",
-                },
-              ],
-            ],
-          },
-        }
-      );
+      const user = this.userRepository.create({
+        username: ctx.message!["text"],
+        id_telegram: ctx.from!.id,
+      });
+      await this.userRepository.save(user);
+      await ctx.reply("Iltimos /start buyrug'ini bosing");
     }
   }
 }
