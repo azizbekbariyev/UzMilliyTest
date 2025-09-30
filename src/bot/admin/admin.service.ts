@@ -24,7 +24,6 @@ export class AdminService {
     if (tests.length == 0) {
       await ctx.reply("Testlar mavjud emas");
     } else {
-      console.log(tests);
       await ctx.replyWithHTML(`Testlar`, {
         reply_markup: {
           inline_keyboard: tests.map((test) => {

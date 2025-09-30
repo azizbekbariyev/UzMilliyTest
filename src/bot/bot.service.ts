@@ -224,7 +224,6 @@ export class BotService {
           });
           const workbook = new ExcelJS.Workbook();
           let worksheet: ExcelJS.Worksheet;
-          console.log(process.cwd(), "uploads", `${test.test_id}.xlsx`);
           const filePath = path.join(
             process.cwd(),
             "uploads",
@@ -237,8 +236,6 @@ export class BotService {
             { header: "Viloyat", key: "region", width: 20 },
             { header: "Savol-Javoblar", key: "answer", width: 20 },
           ];
-
-          console.log(filePath);
 
           await workbook.xlsx.writeFile(filePath);
           ctx.replyWithHTML(

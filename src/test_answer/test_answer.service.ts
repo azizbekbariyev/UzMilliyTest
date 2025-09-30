@@ -88,8 +88,6 @@ export class TestAnswerService {
             { header: "Region", key: "region", width: 15 },
             { header: "Savol-Javoblar", key: "answer", width: 30 },
           ];
-        } else {
-          console.log("Worksheet topildi, qatorlar soni:", worksheet.rowCount);
         }
       } catch (error) {
         worksheet = workbook.addWorksheet("Natijalar");
