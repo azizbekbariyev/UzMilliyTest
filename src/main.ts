@@ -7,25 +7,24 @@ async function start() {
   try {
     const PORT = process.env.PORT || 3030;
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-    app.use(
-      cookieParser({
-        sameSite: "none",
-        secure: true,
-      })
-    );
 
     const allowedOrigins = [
-      "https://https://uz-milliy-front.vercel.app/",
+      "https://uz-milliy-front.vercel.app",
       "http://localhost:5173",
+      "http://localhost:3010",  // ← QO'SHDIM
+      "http://13.127.10.10:3010", // ← QO'SHDIM (backend IP)
       "https://web.telegram.org",
       "https://telegram.org",
     ];
 
     app.enableCors({
       origin: (origin, callback) => {
+        console.log('🔍 So\'rov kelgan origin:', origin);
+        
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
+          console.log('❌ CORS bloklandi:', origin);
           callback(new Error("CORS bloklandi!"), false);
         }
       },
@@ -38,6 +37,9 @@ async function start() {
         "telegram-init-data",
       ],
     });
+
+    // cookieParser ni parametrsiz chaqiring
+    app.use(cookieParser());
 
     app.setGlobalPrefix("api");
 
