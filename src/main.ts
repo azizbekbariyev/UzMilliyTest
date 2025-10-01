@@ -16,6 +16,7 @@ async function start() {
       "http://13.127.10.10:3010",
       "https://web.telegram.org",
       "https://telegram.org",
+      "http://localhost:4173",
     ];
 
     app.enableCors({
