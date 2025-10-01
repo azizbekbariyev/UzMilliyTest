@@ -11,21 +11,20 @@ async function start() {
     const allowedOrigins = [
       "https://uz-milliy-front.vercel.app",
       "http://localhost:5173",
-      "http://localhost:3010",  // ← QO'SHDIM
-      "http://13.127.10.10:3010", // ← QO'SHDIM (backend IP)
+      "http://localhost:3010",
+      "http://localhost:3000",
+      "http://13.127.10.10:3010",
       "https://web.telegram.org",
       "https://telegram.org",
     ];
 
     app.enableCors({
       origin: (origin, callback) => {
-        console.log('🔍 So\'rov kelgan origin:', origin);
-        
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          console.log('❌ CORS bloklandi:', origin);
-          callback(new Error("CORS bloklandi!"), false);
+          console.log('❌ CORS blocked:', origin);
+          callback(new Error("CORS blocked!"), false);
         }
       },
       credentials: true,
@@ -35,19 +34,21 @@ async function start() {
         "Authorization",
         "X-Requested-With",
         "telegram-init-data",
+        "cache-control",
       ],
+      exposedHeaders: ["set-cookie"],
+      preflightContinue: false,
+      optionsSuccessStatus: 204
     });
 
-    // cookieParser ni parametrsiz chaqiring
     app.use(cookieParser());
-
     app.setGlobalPrefix("api");
 
     await app.listen(PORT, () => {
       console.log(`🚀 Server started at http://localhost:${PORT}/api`);
     });
   } catch (error) {
-    console.log(error);
+    console.log('❌ Server start error:', error);
   }
 }
 start();

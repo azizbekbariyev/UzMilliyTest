@@ -14,7 +14,9 @@ export class TestAnswerService {
   constructor(
     @InjectRepository(TestAnswer)
     private readonly testAnswerRepository: Repository<TestAnswer>,
-    private readonly testAnswerRepo: TestAnswerRepository
+    private readonly testAnswerRepo: TestAnswerRepository,
+    @InjectRepository(Test)
+    private readonly testRepository: Repository<Test>,
   ) {}
 
   async getTestAnswerWithTestId(test_id: string) {
@@ -25,13 +27,18 @@ export class TestAnswerService {
 
   async addTestAnswer(test_id: string, answersArray: string[]) {
     const answersToSave: Partial<TestAnswer>[] = [];
+    const test = await this.testRepository.findOne({
+      where: {
+        test_id: test_id,
+      },
+    })
 
     for (const answer of answersArray) {
       answersToSave.push({
         option: answer,
         option_code: "0",
         if_test: false,
-        test: { id: Number(test_id) } as Test,
+        test: test as Test,
       });
     }
 

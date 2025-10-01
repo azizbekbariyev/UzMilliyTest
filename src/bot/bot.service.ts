@@ -78,7 +78,7 @@ export class BotService {
               { id_telegram: userId },
               { token: token }
             );
-            const webAppUrl = `https://https://uz-milliy-front.vercel.app/?token=${token}`;
+            const webAppUrl = `https://uz-milliy-front.vercel.app/?token=${token}`;
             await ctx.replyWithHTML(
               `Assalomu alaykum! 👋 ${ctx.from?.first_name}\n📋 Test ishlash uchun pastdagi tugmani bosing:`,
               {
@@ -258,7 +258,7 @@ export class BotService {
                     {
                       text: "App",
                       web_app: {
-                        url: "https://https://uz-milliy-front.vercel.app//test",
+                        url: "https://uz-milliy-front.vercel.app//test",
                       },
                     },
                   ],

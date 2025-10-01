@@ -14,6 +14,8 @@ export class User {
     })
     id_telegram: number
 
-    @Column()
+    @Column({
+        default: null
+    })
     token: string
 }
