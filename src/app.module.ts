@@ -5,7 +5,6 @@ import { BOT_NAME } from "./app.constants";
 import { BotModule } from "./bot/bot.module";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AdminUpdate } from "./bot/admin/admin.update";
-import { UserUpdate } from "./bot/user/user.update";
 import { session } from 'telegraf';
 import { TestModule } from './test/test.module';
 import { TestAnswerModule } from "./test_answer/test_answer.module";
@@ -20,7 +19,7 @@ import { AuthModule } from './auth/auth.module';
       useFactory: () => ({
         token: process.env.BOT_TOKEN!,
         middlewares: [session()],
-        include: [BotModule, AdminUpdate, UserUpdate],
+        include: [BotModule, AdminUpdate],
       }),
     }),
 

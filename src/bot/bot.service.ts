@@ -321,9 +321,12 @@ export class BotService {
         });
       }
     } else {
+      const length = 32;
+      const token = randomBytes(length).toString("hex");
       const user = this.userRepository.create({
         username: ctx.message!["text"],
         id_telegram: ctx.from!.id,
+        token:token,
       });
       await this.userRepository.save(user);
       await ctx.reply("Iltimos /start buyrug'ini bosing");
