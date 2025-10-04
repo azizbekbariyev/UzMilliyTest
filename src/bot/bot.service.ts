@@ -88,7 +88,7 @@ export class BotService {
               { id_telegram: userId },
               { token: token }
             );
-            const webAppUrl = `http://localhost:5173/?token=${token}`;
+            const webAppUrl = `https://uz-milliy-test.uz/?token=${token}`;
             //http://localhost:5173/?token=06cbc2e47cab18df94f0189bdef1f986767bd31ef47e01ffcad55e30559341b9
             await ctx.replyWithHTML(
               `Assalomu alaykum! 👋 ${ctx.from?.first_name}\n📋 Test ishlash uchun pastdagi tugmani bosing:`,
@@ -267,10 +267,14 @@ export class BotService {
             { header: "Viloyat", key: "region", width: 20 },
             { header: "Savol-Javoblar", key: "answer", width: 20 },
           ];
+          const admin = await this.userRepository.findOne({
+            where:{
+              id_telegram: ctx.from!.id
+            }
+          })
 
           await workbook.xlsx.writeFile(filePath);
-          // const token = this.generateToken()
-          // const webAppUrl = `http://localhost:5173/?token=${token}`
+          const webAppUrl = `https://uz-milliy-test.uz/?token=${admin?.token}`
           ctx.replyWithHTML(
             `Ochiq testlarni javoblarini quyida app orqali kirgizsangiz bo'ladi`,
             {
@@ -280,7 +284,7 @@ export class BotService {
                     {
                       text: "App",
                       web_app: {
-                        url: "https://uz-milliy-front.vercel.app/test",
+                        url: webAppUrl,
                       },
                     },
                   ],

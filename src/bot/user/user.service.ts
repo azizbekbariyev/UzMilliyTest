@@ -3,6 +3,7 @@ import { Context, Markup } from "telegraf";
 import { User } from "../models/user.model";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { randomBytes } from "crypto";
 
 @Injectable()
 export class UserService {
@@ -11,11 +12,14 @@ export class UserService {
     private readonly userRepository: Repository<User>
   ) {}
   async onText(ctx: Context) {
+    const token = randomBytes(length).toString("hex");
     const user = this.userRepository.create({
       username: ctx.message!["text"],
       id_telegram: ctx.from!.id,
+      token,
     });
     await this.userRepository.save(user);
+
     await ctx.replyWithHTML(
       `Assalomu alaykum! 👋 Azizbek Bariyev\n📋 Test ishlash uchun pastdagi tugmani bosing:`,
       {
@@ -24,7 +28,7 @@ export class UserService {
             [
                 {
                     text: "Testni boshlash",
-                    web_app: { url: "https://uz-milliy-front.vercel.app/" }
+                    web_app: { url: `https://` }
                 }
             ],  
             [

@@ -9,14 +9,7 @@ async function start() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
     const allowedOrigins = [
-      "https://uz-milliy-front.vercel.app",
-      "http://localhost:5173",
-      "http://localhost:3010",
-      "http://localhost:3000",
-      "http://13.127.10.10:3010",
-      "https://web.telegram.org",
-      "https://telegram.org",
-      "http://localhost:4173",
+      "https://uz-milliy-test.uz"
     ];
 
     app.enableCors({
