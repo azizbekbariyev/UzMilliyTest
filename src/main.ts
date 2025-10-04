@@ -7,27 +7,33 @@ async function start() {
   try {
     const PORT = process.env.PORT || 3030;
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
+    
     const allowedOrigins = [
       "https://uz-milliy-front.vercel.app",
       "http://localhost:5173",
       "http://localhost:3010",
       "http://localhost:3000",
-      "http://13.127.10.10:3010",
+      "http://localhost:4173",
       "https://web.telegram.org",
       "https://telegram.org",
-      "http://localhost:4173",
     ];
 
     app.enableCors({
       origin: (origin, callback) => {
-        console.log('🔑 CORS origin:', origin);
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Origin bo'lmasa (masalan, Postman yoki server-side request)
+        if (!origin) {
+          console.log('⚠️ No origin - allowing request');
+          return callback(null, true);
+        }
+        
+        // Originni tekshirish
+        if (allowedOrigins.includes(origin)) {
           console.log('✅ CORS allowed:', origin);
           callback(null, true);
         } else {
           console.log('❌ CORS blocked:', origin);
-          callback(new Error("CORS blocked!"), false);
+          // MUHIM: Error o'rniga false qaytarish
+          callback(null, false); // ← BU JOYNI O'ZGARTIRDIK
         }
       },
       credentials: true,
@@ -46,7 +52,7 @@ async function start() {
 
     app.use(cookieParser());
     app.setGlobalPrefix("api");
-
+    
     await app.listen(PORT, () => {
       console.log(`🚀 Server started at http://localhost:${PORT}/api`);
     });
@@ -54,4 +60,5 @@ async function start() {
     console.log('❌ Server start error:', error);
   }
 }
+
 start();
