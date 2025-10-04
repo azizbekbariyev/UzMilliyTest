@@ -29,9 +29,9 @@ export class UserService {
             [
                 {
                     text: "Testni boshlash",
-                    web_app: { url: `https://uz-milliy-test.uz/test/?token=${token}` }
+                    web_app: { url: `https://uz-milliy-test.uz` }
                 }
-            ],  
+            ],
             [
               {
                 text: "Natijani ko'rish",
