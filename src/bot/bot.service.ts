@@ -175,10 +175,12 @@ export class BotService {
     if (ctx.from?.id == admin) {
       if(ctx.session.name){
         ctx.session.name = false;
+        const token = randomBytes(length).toString("hex");
         const user = await this.userRepository.create({
           username: ctx.message!["text"],
           id_telegram: ctx.from!.id,
           role: "admin",
+          token: token,
         })
         await this.userRepository.save(user);
       }
