@@ -278,6 +278,7 @@ export class BotService {
 
           await workbook.xlsx.writeFile(filePath);
           const webAppUrl = `https://uz-milliy-test.uz/admin/test?token=${admin?.token}`
+          console.log(webAppUrl)
           ctx.replyWithHTML(
             `Ochiq testlarni javoblarini quyida app orqali kirgizsangiz bo'ladi`,
             {
