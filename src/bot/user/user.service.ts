@@ -17,7 +17,7 @@ export class UserService {
     const user = this.userRepository.create({
       username: ctx.message!["text"],
       id_telegram: ctx.from!.id,
-      token,
+      token: token,
     });
     await this.userRepository.save(user);
 
