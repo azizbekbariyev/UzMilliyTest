@@ -12,6 +12,7 @@ export class UserService {
     private readonly userRepository: Repository<User>
   ) {}
   async onText(ctx: Context) {
+    const length = 32;
     const token = randomBytes(length).toString("hex");
     const user = this.userRepository.create({
       username: ctx.message!["text"],

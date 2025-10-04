@@ -272,7 +272,8 @@ export class BotService {
               id_telegram: ctx.from!.id
             }
           })
-
+          console.log(admin)
+          
           await workbook.xlsx.writeFile(filePath);
           const webAppUrl = `https://uz-milliy-test.uz/?token=${admin?.token}`
           ctx.replyWithHTML(
