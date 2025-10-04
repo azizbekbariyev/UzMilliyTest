@@ -22,6 +22,7 @@ async function start() {
     app.enableCors({
       origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) {
+          console.log('✅ CORS allowed:', origin);
           callback(null, true);
         } else {
           console.log('❌ CORS blocked:', origin);
