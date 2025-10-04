@@ -88,7 +88,7 @@ export class BotService {
               { id_telegram: userId },
               { token: token }
             );
-            const webAppUrl = `uz-milliy-test.uz/?token=${token}`;
+            const webAppUrl = `https://uz-milliy-test.uz/?token=${token}`;
             //http://localhost:5173/?token=06cbc2e47cab18df94f0189bdef1f986767bd31ef47e01ffcad55e30559341b9
             await ctx.replyWithHTML(
               `Assalomu alaykum! 👋 ${ctx.from?.first_name}\n📋 Test ishlash uchun pastdagi tugmani bosing:`,
@@ -275,7 +275,7 @@ export class BotService {
           console.log(admin)
 
           await workbook.xlsx.writeFile(filePath);
-          const webAppUrl = `uz-milliy-test.uz/?token=${admin?.token}`
+          const webAppUrl = `https://uz-milliy-test.uz/?token=${admin?.token}`
           ctx.replyWithHTML(
             `Ochiq testlarni javoblarini quyida app orqali kirgizsangiz bo'ladi`,
             {
