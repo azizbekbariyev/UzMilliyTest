@@ -9,20 +9,6 @@ export class BotUpdate {
 
   @Start()
   async start(@Ctx() ctx: MyContext) {
-    ctx.replyWithHTML(`Assalomu alaykum, ${ctx.from?.first_name}!`, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "Online testlarni ko'rish",
-              web_app: {
-                url: 'https://uz-milliy-test.uz',
-              }
-            },
-          ],
-        ],
-      },
-    })
     await this.botService.start(ctx);
   }
 

@@ -326,7 +326,7 @@ export class BotService {
       const user = this.userRepository.create({
         username: ctx.message!["text"],
         id_telegram: ctx.from!.id,
-        token:token,
+        token:token
       });
       await this.userRepository.save(user);
       await ctx.reply("Iltimos /start buyrug'ini bosing");
