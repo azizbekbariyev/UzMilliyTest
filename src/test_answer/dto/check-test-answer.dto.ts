@@ -23,4 +23,5 @@ export class CheckTestAnswerDto {
   };
   testData: TestDataDto;
   test: TestInfoDto[];
+  token: string;
 }

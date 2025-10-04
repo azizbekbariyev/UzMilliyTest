@@ -4,6 +4,7 @@ interface Session {
   science: boolean
   countTest: boolean
   openTest: boolean
+  name:boolean
 }
 
 interface SessionText{

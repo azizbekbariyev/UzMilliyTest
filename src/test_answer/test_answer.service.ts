@@ -8,6 +8,8 @@ import { CheckTestAnswerDto } from "./dto/check-test-answer.dto";
 import * as fs from "fs";
 import * as path from "path";
 import * as ExcelJS from "exceljs";
+import { User } from "src/bot/models/user.model";
+import { TestService } from "src/bot/test/test.service";
 
 @Injectable()
 export class TestAnswerService {
@@ -17,6 +19,9 @@ export class TestAnswerService {
     private readonly testAnswerRepo: TestAnswerRepository,
     @InjectRepository(Test)
     private readonly testRepository: Repository<Test>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly testService: TestService
   ) {}
 
   async getTestAnswerWithTestId(test_id: string) {
@@ -31,7 +36,7 @@ export class TestAnswerService {
       where: {
         test_id: test_id,
       },
-    })
+    });
 
     for (const answer of answersArray) {
       answersToSave.push({
@@ -68,6 +73,8 @@ export class TestAnswerService {
         const userAns = body.answers[ans.id];
         if (userAns) {
           results[`${ans.id}`] = userAns.value === ans.option ? 1 : 0;
+        } else {
+          results[`${ans.id}`] = 0;
         }
       }
     }
@@ -125,6 +132,25 @@ export class TestAnswerService {
     ]);
     await workbook.xlsx.writeFile(filePath);
     newRow.commit();
+    const user = await this.userRepository.findOne({
+      where: {
+        token: body.token,
+      },
+    });
+    const chatId = user?.id_telegram;
+    const totalQuestions = Object.keys(results).length;
+    const correct = Object.values(results).filter((v) => v === 1).length;
+    const incorrect = Object.values(results).filter((v) => v === 0).length;
+
+    const message = `📊 *Test natijalari* 📊
+
+🧾 *Test kodi:* ${body.test[0].test_id}
+❓ *Savollar soni:* ${totalQuestions}
+
+✅ *To'g'ri javoblar:* ${correct}
+❌ *Xato javoblar:* ${incorrect}
+`;
+    this.testService.sendTestUser(chatId!, message);
     return results;
   }
 }

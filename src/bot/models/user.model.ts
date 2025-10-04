@@ -18,4 +18,11 @@ export class User {
         default: null
     })
     token: string
+
+    @Column({
+        type: "enum",
+        enum: ["admin", "user"],
+        default: "user"
+    })
+    role: string
 }

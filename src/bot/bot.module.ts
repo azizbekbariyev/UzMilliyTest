@@ -25,5 +25,6 @@ import { TestService } from "./test/test.service";
     BotUpdate,
     UserUpdate,
   ],
+  exports: [TestService],
 })
 export class BotModule {}

@@ -21,7 +21,6 @@ export class TestAnswerController {
 
   @Post("check-test-answer/:test_id")
   async checkTestAnswer(@Param("test_id") test_id: string, @Body() body :CheckTestAnswerDto ) {
-    console.log(body)
     return this.testAnswerService.checkTestAnswer(test_id, body);
   }
 }

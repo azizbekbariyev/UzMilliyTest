@@ -5,12 +5,16 @@ import { Context } from "telegraf";
 import { Repository } from "typeorm";
 import { Test } from "../models/test.model";
 import { join } from "path";
+import { InjectBot } from "nestjs-telegraf";
+import { Telegraf } from "telegraf";
+import { BOT_NAME } from "src/app.constants";
 
 @Injectable()
 export class TestService {
   constructor(
     @InjectRepository(Test)
-    private readonly testRepository: Repository<Test>
+    private readonly testRepository: Repository<Test>,
+    @InjectBot(BOT_NAME) private readonly bot: Telegraf
   ) {}
 
   async science(ctx: Context) {
@@ -58,5 +62,9 @@ export class TestService {
       source: filePath,
       filename: `${testId}.xlsx`,
     });
+  }
+
+  async sendTestUser(chatId:number, message:string){
+    await this.bot.telegram.sendMessage(chatId, message)
   }
 }

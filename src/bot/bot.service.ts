@@ -37,28 +37,38 @@ export class BotService {
     ctx.session.countTest = false;
     ctx.session.openTest = false;
     if (ctx.from?.id == admin) {
-      await ctx.replyWithHTML(`Menuni tanlang:`, {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: "Online testlarni ko'rish",
-                callback_data: "online_tests",
-              },
-            ],
-            [
-              {
-                text: "Test qo'shish",
-                callback_data: "add_test",
-              },
-              {
-                text: "Fan qo'shish",
-                callback_data: "add_science",
-              },
-            ],
-          ],
+      const adminRepo = await this.userRepository.findOne({
+        where: {
+          id_telegram: admin,
         },
       });
+      if (!adminRepo) {
+        ctx.session.name = true;
+        await ctx.reply("Iltimos, ismingiz va familiyangizni kiriting:");
+      } else {
+        await ctx.replyWithHTML(`Menuni tanlang:`, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Online testlarni ko'rish",
+                  callback_data: "online_tests",
+                },
+              ],
+              [
+                {
+                  text: "Test qo'shish",
+                  callback_data: "add_test",
+                },
+                {
+                  text: "Fan qo'shish",
+                  callback_data: "add_science",
+                },
+              ],
+            ],
+          },
+        });
+      }
     } else {
       const userId = ctx.from!.id;
       const channel = "@azizbek_bariyev_life";
@@ -78,7 +88,8 @@ export class BotService {
               { id_telegram: userId },
               { token: token }
             );
-            const webAppUrl = `http://localhost:4173/?token=${token}`;
+            const webAppUrl = `http://localhost:5173/?token=${token}`;
+            //http://localhost:5173/?token=06cbc2e47cab18df94f0189bdef1f986767bd31ef47e01ffcad55e30559341b9
             await ctx.replyWithHTML(
               `Assalomu alaykum! 👋 ${ctx.from?.first_name}\n📋 Test ishlash uchun pastdagi tugmani bosing:`,
               {
@@ -162,6 +173,15 @@ export class BotService {
   async onText(ctx: MyContext) {
     const admin = process.env.ADMIN;
     if (ctx.from?.id == admin) {
+      if(ctx.session.name){
+        ctx.session.name = false;
+        const user = await this.userRepository.create({
+          username: ctx.message!["text"],
+          id_telegram: ctx.from!.id,
+          role: "admin",
+        })
+        await this.userRepository.save(user);
+      }
       if (ctx.session.science) {
         ctx.session.scienceText = ctx.message!["text"];
         await this.scienceRepository.save({
@@ -249,6 +269,8 @@ export class BotService {
           ];
 
           await workbook.xlsx.writeFile(filePath);
+          // const token = this.generateToken()
+          // const webAppUrl = `http://localhost:5173/?token=${token}`
           ctx.replyWithHTML(
             `Ochiq testlarni javoblarini quyida app orqali kirgizsangiz bo'ladi`,
             {
@@ -258,7 +280,7 @@ export class BotService {
                     {
                       text: "App",
                       web_app: {
-                        url: "https://uz-milliy-front.vercel.app//test",
+                        url: "https://uz-milliy-front.vercel.app/test",
                       },
                     },
                   ],

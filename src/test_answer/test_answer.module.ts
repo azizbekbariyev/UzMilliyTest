@@ -5,10 +5,12 @@ import { TestAnswerService } from "./test_answer.service";
 import { TestAnswer } from "src/bot/models/test_answer";
 import { TestAnswerRepository } from "./test_answer.repository";
 import { Test } from "src/bot/models/test.model";
+import { User } from "src/bot/models/user.model";
+import { BotModule } from "src/bot/bot.module";
 
 
 @Module({
-    imports: [TypeOrmModule.forFeature([TestAnswer , Test])],
+    imports: [TypeOrmModule.forFeature([TestAnswer , Test, User]), BotModule],
     controllers: [TestAnswerController],
     providers: [TestAnswerService, TestAnswerRepository],
 })

@@ -9,6 +9,7 @@ import { UserUpdate } from "./bot/user/user.update";
 import { session } from 'telegraf';
 import { TestModule } from './test/test.module';
 import { TestAnswerModule } from "./test_answer/test_answer.module";
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { TestAnswerModule } from "./test_answer/test_answer.module";
     BotModule,
     TestModule,
     TestAnswerModule,
+    AuthModule,
   ],
   controllers: [],
   providers: [],
