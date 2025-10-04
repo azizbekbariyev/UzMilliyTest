@@ -33,20 +33,6 @@ export class BotService {
 
   async start(ctx: MyContext) {
     const admin = process.env.ADMIN;
-    ctx.replyWithHTML(`Assalomu alaykum, ${ctx.from?.first_name}!`, {
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              text: "Online testlarni ko'rish",
-              web_app: {
-                url: 'https://uz-milliy-test.uz',
-              }
-            },
-          ],
-        ],
-      },
-    })
     ctx.session.science = false;
     ctx.session.countTest = false;
     ctx.session.openTest = false;
