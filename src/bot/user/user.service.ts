@@ -28,7 +28,7 @@ export class UserService {
             [
                 {
                     text: "Testni boshlash",
-                    web_app: { url: `https://` }
+                    web_app: { url: `https://uz-milliy-test.uz/test/?token=${token}` }
                 }
             ],  
             [
