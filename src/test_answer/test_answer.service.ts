@@ -141,9 +141,14 @@ export class TestAnswerService {
     ]);
     await workbook.xlsx.writeFile(filePath);
     newRow.commit();
+    const test = await this.testRepository.findOne({
+      where: {
+        test_id: body.test[0].test_id,
+      },
+    })
     const userTestCheckCreate = this.userTestCheckRepository.create({
       user: user as User,
-      test: body.test[0],
+      test: test as Test,
     });
     await this.userTestCheckRepository.save(userTestCheckCreate);
     const chatId = user?.id_telegram;
@@ -164,7 +169,6 @@ export class TestAnswerService {
   }
 
   async testCheckOneSubmit(req: Request, test_id: string) {
-    console.log(test_id, req);
     const user_token = (req.headers as any).authorization?.replace("Bearer ", "");
     const user = await this.userTestCheckRepository.find({
       where: {
@@ -176,8 +180,6 @@ export class TestAnswerService {
         },
       },
     })
-    console.log(user);
-
     if (user.length > 0) {
       return true;
     } else {
