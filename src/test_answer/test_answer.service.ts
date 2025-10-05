@@ -162,7 +162,8 @@ export class TestAnswerService {
     return results;
   }
 
-  async testCheckOneSubmit(user_token: string, test_id: string) {
+  async testCheckOneSubmit(req: Request, test_id: string) {
+    const user_token = (req.headers as any).authorization?.replace("Bearer ", "");
     const user = await this.userTestCheckRepository.find({
       where: {
         user: {
