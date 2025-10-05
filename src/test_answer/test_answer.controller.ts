@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { TestAnswerService } from "./test_answer.service";
 import { CheckTestAnswerDto } from "./dto/check-test-answer.dto";
+import { Req } from "@nestjs/common";
 
 @Controller("test-answer")
 export class TestAnswerController {
@@ -28,10 +29,9 @@ export class TestAnswerController {
   }
 
   @Get("test-check-one-submit")
-  async testCheckOneSubmit(
-    @Query("test_id") test_id: string,
-    @Query("user_token") user_token: string
-  ) {
-    return this.testAnswerService.testCheckOneSubmit(user_token, test_id);
+  async testCheckOneSubmit(@Req() req, @Query("test_id") test_id: string) {
+    const user_id = req.user.id; // JWT middleware orqali olinadi
+
+    return this.testAnswerService.testCheckOneSubmit(user_id, test_id);
   }
 }
