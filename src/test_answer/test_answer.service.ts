@@ -164,6 +164,7 @@ export class TestAnswerService {
   }
 
   async testCheckOneSubmit(req: Request, test_id: string) {
+    console.log(test_id, req);
     const user_token = (req.headers as any).authorization?.replace("Bearer ", "");
     const user = await this.userTestCheckRepository.find({
       where: {
@@ -175,6 +176,7 @@ export class TestAnswerService {
         },
       },
     })
+    console.log(user);
 
     if (user.length > 0) {
       return true;
