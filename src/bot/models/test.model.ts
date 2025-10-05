@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { TestAnswer } from "./test_answer";
 import { Science } from "./science";
+import { UserTestCheck } from "./userTestCheck";
 
 // test.model.ts
 @Entity("test")
@@ -25,4 +26,7 @@ export class Test {
   @ManyToOne(() => Science, (science) => science.tests)
   @JoinColumn({ name: "science_id" })
   science: Science;
+
+  @OneToMany(()=>UserTestCheck, (userTestCheck) => userTestCheck.test)
+  userTestChecks: UserTestCheck[]
 }

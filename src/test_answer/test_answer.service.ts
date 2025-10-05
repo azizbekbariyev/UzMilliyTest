@@ -10,6 +10,7 @@ import * as path from "path";
 import * as ExcelJS from "exceljs";
 import { User } from "src/bot/models/user.model";
 import { TestService } from "src/bot/test/test.service";
+import { UserTestCheck } from "src/bot/models/userTestCheck";
 
 @Injectable()
 export class TestAnswerService {
@@ -21,7 +22,9 @@ export class TestAnswerService {
     private readonly testRepository: Repository<Test>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly testService: TestService
+    private readonly testService: TestService,
+    @InjectRepository(UserTestCheck)
+    private readonly userTestCheckRepository: Repository<UserTestCheck>
   ) {}
 
   async getTestAnswerWithTestId(test_id: string) {
@@ -51,6 +54,11 @@ export class TestAnswerService {
   }
 
   async checkTestAnswer(test_id: string, body: CheckTestAnswerDto) {
+    const user = await this.userRepository.findOne({
+      where: {
+        token: body.token,
+      },
+    });
     let results: Record<string, number> = {};
     const testAnswer =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
@@ -132,11 +140,11 @@ export class TestAnswerService {
     ]);
     await workbook.xlsx.writeFile(filePath);
     newRow.commit();
-    const user = await this.userRepository.findOne({
-      where: {
-        token: body.token,
-      },
+    const userTestCheckCreate = this.userTestCheckRepository.create({
+      user: user as User,
+      test: body.test[0],
     });
+    await this.userTestCheckRepository.save(userTestCheckCreate);
     const chatId = user?.id_telegram;
     const totalQuestions = Object.keys(results).length;
     const correct = Object.values(results).filter((v) => v === 1).length;
@@ -152,5 +160,24 @@ export class TestAnswerService {
 `;
     this.testService.sendTestUser(chatId!, message);
     return results;
+  }
+
+  async testCheckOneSubmit(user_token: string, test_id: string) {
+    const user = await this.userTestCheckRepository.find({
+      where: {
+        user: {
+          token: user_token,
+        },
+        test: {
+          test_id: test_id,
+        },
+      },
+    })
+
+    if (user.length > 0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }

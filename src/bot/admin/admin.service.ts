@@ -29,7 +29,7 @@ export class AdminService {
           inline_keyboard: tests.map((test) => {
             return [
               {
-                text: test.subject_name,
+                text: test.test_id,
                 callback_data: `test_code_${test.test_id}`,
               },
             ];
