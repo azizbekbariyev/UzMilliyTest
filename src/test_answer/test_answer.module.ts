@@ -7,10 +7,11 @@ import { TestAnswerRepository } from "./test_answer.repository";
 import { Test } from "src/bot/models/test.model";
 import { User } from "src/bot/models/user.model";
 import { BotModule } from "src/bot/bot.module";
+import { UserTestCheck } from "src/bot/models/userTestCheck";
 
 
 @Module({
-    imports: [TypeOrmModule.forFeature([TestAnswer , Test, User]), BotModule],
+    imports: [TypeOrmModule.forFeature([TestAnswer , Test, User, UserTestCheck]), BotModule],
     controllers: [TestAnswerController],
     providers: [TestAnswerService, TestAnswerRepository],
 })
