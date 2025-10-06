@@ -36,7 +36,7 @@ export class TestService {
     ctx.session.scienceText = ctx.callbackQuery!["data"].split("_")[1];
     ctx.session.countTest = true;
     ctx.reply(
-      "Sizning testingiz kodi, nechta quiz test bo'lishi va har bir testda nechta variant bo'lishini quyidagicha yozing\n\nM18,20,5"
+      "Sizning testingiz kodi va nechta quiz test bo'lishi quyidagicha yozing\n\nM18,20"
     );
   }
 

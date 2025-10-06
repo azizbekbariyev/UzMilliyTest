@@ -65,15 +65,13 @@ export class TestAnswerService {
     const testAnswer =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
 
-    console.log("Test Answer", testAnswer);
+    let countTest=1;
 
     for (const ans of testAnswer) {
       if (ans.if_test) {
         for (let i = 0; i < ans.option_code; i++) {
-          console.log("Ans Option Code", ans.option_code);
           const key = `${ans.id}-${i}`;
           const userAns = body.answers[key];
-          console.log("User Ans", userAns);
 
           if (userAns) {
             const correctOptions = ans.option
@@ -81,22 +79,20 @@ export class TestAnswerService {
               .split(",")
               .map((s: string) => s.split("-")[1].trim());
 
-            console.log("Correct Options", correctOptions);
             const correctValue = correctOptions[i];
-            console.log("Correct Value", correctValue);
-            results[key] = userAns.value === correctValue ? 1 : 0;
-            console.log("Results", results);
+            results[countTest] = userAns.value === correctValue ? 1 : 0;
           }
+          countTest++;
         }
       } else {
         const userAns = body.answers[ans.id];
-        console.log("User Ans", userAns);
 
         if (userAns) {
-          results[`${ans.id}`] = userAns.value === ans.option ? 1 : 0;
+          results[`${countTest}`] = userAns.value === ans.option ? 1 : 0;
         } else {
-          results[`${ans.id}`] = 0;
+          results[`${countTest}`] = 0;
         }
+        countTest++;
       }
     }
 
