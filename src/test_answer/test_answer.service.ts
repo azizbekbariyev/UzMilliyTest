@@ -60,35 +60,38 @@ export class TestAnswerService {
         token: body.token,
       },
     });
+
     let results: Record<string, number> = {};
     const testAnswer =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
-    
-    console.log("Test Answer", testAnswer)
+
+    console.log("Test Answer", testAnswer);
 
     for (const ans of testAnswer) {
       if (ans.if_test) {
         for (let i = 0; i < ans.option_code; i++) {
-          console.log("Ans Option Code", ans.option_code)
+          console.log("Ans Option Code", ans.option_code);
           const key = `${ans.id}-${i}`;
           const userAns = body.answers[key];
-          console.log("User Ans", userAns)
+          console.log("User Ans", userAns);
+
           if (userAns) {
             const correctOptions = ans.option
               .replace(/[{}"]/g, "")
               .split(",")
               .map((s: string) => s.split("-")[1].trim());
-            
-            console.log("Correct Options", correctOptions)
+
+            console.log("Correct Options", correctOptions);
             const correctValue = correctOptions[i];
-            console.log("Correct Value", correctValue)
-            results[key.split("-")[1]] = userAns.value === correctValue ? 1 : 0;
-            console.log("Results", results)
+            console.log("Correct Value", correctValue);
+            results[key] = userAns.value === correctValue ? 1 : 0;
+            console.log("Results", results);
           }
         }
       } else {
         const userAns = body.answers[ans.id];
-        console.log("User Ans", userAns)
+        console.log("User Ans", userAns);
+
         if (userAns) {
           results[`${ans.id}`] = userAns.value === ans.option ? 1 : 0;
         } else {
@@ -154,7 +157,8 @@ export class TestAnswerService {
       where: {
         test_id: body.test[0].test_id,
       },
-    })
+    });
+
     const userTestCheckCreate = this.userTestCheckRepository.create({
       user: user as User,
       test: test as Test,
@@ -178,7 +182,10 @@ export class TestAnswerService {
   }
 
   async testCheckOneSubmit(req: Request, test_id: string) {
-    const user_token = (req.headers as any).authorization?.replace("Bearer ", "");
+    const user_token = (req.headers as any).authorization?.replace(
+      "Bearer ",
+      ""
+    );
     const user = await this.userTestCheckRepository.find({
       where: {
         user: {
@@ -188,7 +195,7 @@ export class TestAnswerService {
           test_id: test_id,
         },
       },
-    })
+    });
     if (user.length > 0) {
       return true;
     } else {

@@ -252,7 +252,7 @@ export class BotService {
           });
           await this.testAnswerRepository.save({
             option: filterTest,
-            option_code: ctx.session.countTestText.split(",")[2],
+            option_code: ctx.session.countTestText.split(",")[1],
             test,
           });
           const workbook = new ExcelJS.Workbook();
