@@ -32,17 +32,17 @@ export class BotService {
   }
 
   async start(ctx: MyContext) {
-    const admin = process.env.ADMIN1 || process.env.ADMIN2 || process.env.ADMIN3;
-    console.log("Admin1" + process.env.ADMIN1 + "Admin2" + process.env.ADMIN2 + "Admin3" + process.env.ADMIN3)
-    console.log(admin)
+    const admin1 = Number(process.env.ADMIN1);
+    const admin2 = Number(process.env.ADMIN2);
+    const admin3 = Number(process.env.ADMIN3);
     ctx.session.science = false;
     ctx.session.countTest = false;
     ctx.session.openTest = false;
-    if (ctx.from?.id == admin) {
-      console.log("Teng")
+    if (ctx.from?.id == admin1 || ctx.from?.id == admin2 || ctx.from?.id == admin3) {
+      console.log("Teng");
       const adminRepo = await this.userRepository.findOne({
         where: {
-          id_telegram: admin,
+          id_telegram: ctx.from?.id,
         },
       });
       if (!adminRepo) {
@@ -73,7 +73,6 @@ export class BotService {
         });
       }
     } else {
-      console.log("Teng emas", typeof ctx.from?.id, typeof admin)
       const userId = ctx.from!.id;
       const channel = "@shamseducation";
       try {
@@ -175,10 +174,11 @@ export class BotService {
   }
 
   async onText(ctx: MyContext) {
-    const admin = process.env.ADMIN1 || process.env.ADMIN2 || process.env.ADMIN3;
-    console.log("Admin1" + process.env.ADMIN1 + "Admin2" + process.env.ADMIN2 + "Admin3" + process.env.ADMIN3)
-    if (ctx.from?.id == admin) {
-      if(ctx.session.name){
+    const admin1 = process.env.ADMIN1;
+    const admin2 = process.env.ADMIN2;
+    const admin3 = process.env.ADMIN3;
+    if (ctx.from?.id == admin1 || ctx.from?.id == admin2 || ctx.from?.id == admin3) {
+      if (ctx.session.name) {
         ctx.session.name = false;
         const token = randomBytes(length).toString("hex");
         const user = this.userRepository.create({
@@ -186,7 +186,7 @@ export class BotService {
           id_telegram: ctx.from!.id,
           role: "admin",
           token: token,
-        })
+        });
         await this.userRepository.save(user);
       }
       if (ctx.session.science) {
@@ -275,12 +275,12 @@ export class BotService {
             { header: "Savol-Javoblar", key: "answer", width: 20 },
           ];
           const admin = await this.userRepository.findOne({
-            where:{
-              id_telegram: ctx.from!.id
-            }
-          })
+            where: {
+              id_telegram: ctx.from!.id,
+            },
+          });
           await workbook.xlsx.writeFile(filePath);
-          const webAppUrl = `https://uz-milliy-test.uz/admin/test?token=${admin?.token}`
+          const webAppUrl = `https://uz-milliy-test.uz/admin/test?token=${admin?.token}`;
           ctx.replyWithHTML(
             `Ochiq testlarni javoblarini quyida app orqali kirgizsangiz bo'ladi`,
             {
@@ -331,7 +331,7 @@ export class BotService {
       const user = this.userRepository.create({
         username: ctx.message!["text"],
         id_telegram: ctx.from!.id,
-        token:token
+        token: token,
       });
       await this.userRepository.save(user);
       await ctx.reply("Iltimos /start buyrug'ini bosing");
