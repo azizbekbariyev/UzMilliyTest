@@ -33,6 +33,8 @@ export class BotService {
 
   async start(ctx: MyContext) {
     const admin = process.env.ADMIN1 || process.env.ADMIN2 || process.env.ADMIN3;
+    console.log("Admin1" + process.env.ADMIN1 + "Admin2" + process.env.ADMIN2 + "Admin3" + process.env.ADMIN3)
+    console.log(admin)
     ctx.session.science = false;
     ctx.session.countTest = false;
     ctx.session.openTest = false;
@@ -172,6 +174,7 @@ export class BotService {
 
   async onText(ctx: MyContext) {
     const admin = process.env.ADMIN1 || process.env.ADMIN2 || process.env.ADMIN3;
+    console.log("Admin1" + process.env.ADMIN1 + "Admin2" + process.env.ADMIN2 + "Admin3" + process.env.ADMIN3)
     if (ctx.from?.id == admin) {
       if(ctx.session.name){
         ctx.session.name = false;
