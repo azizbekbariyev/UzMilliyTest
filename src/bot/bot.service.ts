@@ -155,7 +155,7 @@ export class BotService {
 
   async check(ctx: Context) {
     const userId = ctx.from!.id;
-    const channel = "@azizbek_bariyev_life";
+    const channel = "@shamseducation";
     try {
       const member = await this.bot.telegram.getChatMember(channel, userId);
       if (["member", "administrator", "creator"].includes(member.status)) {
