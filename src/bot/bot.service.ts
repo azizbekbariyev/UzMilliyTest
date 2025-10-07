@@ -32,7 +32,7 @@ export class BotService {
   }
 
   async start(ctx: MyContext) {
-    const admin = process.env.ADMIN;
+    const admin = process.env.ADMIN1 || process.env.ADMIN2 || process.env.ADMIN3;
     ctx.session.science = false;
     ctx.session.countTest = false;
     ctx.session.openTest = false;
@@ -71,7 +71,7 @@ export class BotService {
       }
     } else {
       const userId = ctx.from!.id;
-      const channel = "@azizbek_bariyev_life";
+      const channel = "@shamseducation";
       try {
         const member = await this.bot.telegram.getChatMember(channel, userId);
         if (["member", "administrator", "creator"].includes(member.status)) {
@@ -133,7 +133,7 @@ export class BotService {
                   [
                     {
                       text: "🔗 Kanalga obuna bo'ling",
-                      url: "https://t.me/azizbek_bariyev_life",
+                      url: "https://t.me/shamseducation",
                     },
                   ],
                   [
@@ -171,7 +171,7 @@ export class BotService {
   }
 
   async onText(ctx: MyContext) {
-    const admin = process.env.ADMIN;
+    const admin = process.env.ADMIN1 || process.env.ADMIN2 || process.env.ADMIN3;
     if (ctx.from?.id == admin) {
       if(ctx.session.name){
         ctx.session.name = false;
