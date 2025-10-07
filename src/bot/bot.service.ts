@@ -39,7 +39,6 @@ export class BotService {
     ctx.session.countTest = false;
     ctx.session.openTest = false;
     if (ctx.from?.id == admin1 || ctx.from?.id == admin2 || ctx.from?.id == admin3) {
-      console.log("Teng");
       const adminRepo = await this.userRepository.findOne({
         where: {
           id_telegram: ctx.from?.id,
