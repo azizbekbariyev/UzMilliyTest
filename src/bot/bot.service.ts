@@ -39,6 +39,7 @@ export class BotService {
     ctx.session.countTest = false;
     ctx.session.openTest = false;
     if (ctx.from?.id == admin) {
+      console.log("Teng")
       const adminRepo = await this.userRepository.findOne({
         where: {
           id_telegram: admin,
@@ -72,6 +73,7 @@ export class BotService {
         });
       }
     } else {
+      console.log("Teng emas", typeof ctx.from?.id, typeof admin)
       const userId = ctx.from!.id;
       const channel = "@shamseducation";
       try {
@@ -179,7 +181,7 @@ export class BotService {
       if(ctx.session.name){
         ctx.session.name = false;
         const token = randomBytes(length).toString("hex");
-        const user = await this.userRepository.create({
+        const user = this.userRepository.create({
           username: ctx.message!["text"],
           id_telegram: ctx.from!.id,
           role: "admin",
