@@ -9,7 +9,10 @@ async function start() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
     const allowedOrigins = [
-      "https://bot.shamseducation.uz/"
+      "https://bot.shamseducation.uz", // slash yo'q
+      "https://bot.shamseducation.uz/", // slash bor
+      "http://localhost:5173", // development uchun
+      "http://localhost:3000",
     ];
 
     app.enableCors({
@@ -17,7 +20,7 @@ async function start() {
         if (!origin || allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          console.log('❌ CORS blocked:', origin);
+          console.log("❌ CORS blocked:", origin);
           callback(new Error("CORS blocked!"), false);
         }
       },
@@ -32,7 +35,7 @@ async function start() {
       ],
       exposedHeaders: ["set-cookie"],
       preflightContinue: false,
-      optionsSuccessStatus: 204
+      optionsSuccessStatus: 204,
     });
 
     app.use(cookieParser());
@@ -42,7 +45,7 @@ async function start() {
       console.log(`🚀 Server started at http://localhost:${PORT}/api`);
     });
   } catch (error) {
-    console.log('❌ Server start error:', error);
+    console.log("❌ Server start error:", error);
   }
 }
 start();
