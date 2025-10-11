@@ -9,7 +9,7 @@ async function start() {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
     const allowedOrigins = [
-      "https://shamseducation.uz/"
+      "https://test.shamseducation.uz/"
     ];
 
     app.enableCors({

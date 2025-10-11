@@ -151,14 +151,19 @@ export class TestAnswerService {
     newRow.commit();
     const test = await this.testRepository.findOne({
       where: {
-        test_id: body.test[0].test_id,
+        test_id: body.test[0].test_id
       },
     });
+    if(!test){
+      return;
+    }
+
 
     const userTestCheckCreate = this.userTestCheckRepository.create({
       user: user as User,
       test: test as Test,
     });
+
     await this.userTestCheckRepository.save(userTestCheckCreate);
     const chatId = user?.id_telegram;
     const totalQuestions = Object.keys(results).length;
