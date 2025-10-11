@@ -16,14 +16,15 @@ async function start() {
     ];
 
     app.enableCors({
-      origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          console.log("❌ CORS blocked:", origin);
-          callback(new Error("CORS blocked!"), false);
-        }
-      },
+      origin: true,
+      // (origin, callback) => {
+      //   if (!origin || allowedOrigins.includes(origin)) {
+      //     callback(null, true);
+      //   } else {
+      //     console.log("❌ CORS blocked:", origin);
+      //     callback(new Error("CORS blocked!"), false);
+      //   }
+      // },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: [
