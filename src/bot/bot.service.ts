@@ -38,7 +38,11 @@ export class BotService {
     ctx.session.science = false;
     ctx.session.countTest = false;
     ctx.session.openTest = false;
-    if (ctx.from?.id == admin1 || ctx.from?.id == admin2 || ctx.from?.id == admin3) {
+    if (
+      ctx.from?.id == admin1 ||
+      ctx.from?.id == admin2 ||
+      ctx.from?.id == admin3
+    ) {
       const adminRepo = await this.userRepository.findOne({
         where: {
           id_telegram: ctx.from?.id,
@@ -176,7 +180,11 @@ export class BotService {
     const admin1 = process.env.ADMIN1;
     const admin2 = process.env.ADMIN2;
     const admin3 = process.env.ADMIN3;
-    if (ctx.from?.id == admin1 || ctx.from?.id == admin2 || ctx.from?.id == admin3) {
+    if (
+      ctx.from?.id == admin1 ||
+      ctx.from?.id == admin2 ||
+      ctx.from?.id == admin3
+    ) {
       if (ctx.session.name) {
         ctx.session.name = false;
         const token = randomBytes(length).toString("hex");
@@ -236,8 +244,7 @@ export class BotService {
       } else if (ctx.session.openTest) {
         const filterTest = ctx.message!["text"].split(",");
         const filterTestCount = filterTest.length;
-        const testCount = ctx.session.countTestText.split(",")[1];
-        if (filterTestCount == testCount) {
+        if (filterTestCount == 35) {
           ctx.session.openTest = false;
           const science = await this.scienceRepository.findOne({
             where: {
@@ -266,13 +273,16 @@ export class BotService {
             "uploads",
             `${test.test_id}.xlsx`
           );
-          worksheet = workbook.addWorksheet("Natijalar");
-          worksheet.columns = [
+          const baseColumns = [
             { header: "ID", key: "id", width: 10 },
             { header: "Ism-Familiya", key: "name", width: 20 },
             { header: "Viloyat", key: "region", width: 20 },
-            { header: "Savol-Javoblar", key: "answer", width: 20 },
           ];
+          for (let i = 1; i <= parseInt(ctx.session.countTestText.split(',')[1]); i++) {
+            baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
+          }
+          worksheet = workbook.addWorksheet("Natijalar");
+          worksheet.columns = baseColumns
           const admin = await this.userRepository.findOne({
             where: {
               id_telegram: ctx.from!.id,

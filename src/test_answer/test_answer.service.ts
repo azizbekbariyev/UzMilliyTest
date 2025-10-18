@@ -35,12 +35,66 @@ export class TestAnswerService {
   }
 
   async addTestAnswer(test_id: string, answersArray: string[]) {
-    const answersToSave: Partial<TestAnswer>[] = [];
-    const test = await this.testRepository.findOne({
-      where: {
-        test_id: test_id,
-      },
+    const filePath = path.join(process.cwd(), "uploads", `${test_id}.xlsx`);
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`❌ Fayl topilmadi: ${filePath}`);
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filePath);
+    let worksheet = workbook.getWorksheet("Natijalar");
+    if (!worksheet) worksheet = workbook.addWorksheet("Natijalar");
+
+    // ✅ Mavjud maksimal test raqamini topish
+    let maxTestNumber = 0;
+    const headerRow = worksheet.getRow(1);
+    
+    headerRow.eachCell((cell) => {
+      const value = cell.value?.toString() || "";
+      const match = value.match(/^T(\d+)$/); // T1, T2, T3... formatini topish
+      if (match) {
+        const num = parseInt(match[1]);
+        if (num > maxTestNumber) {
+          maxTestNumber = num;
+        }
+      }
     });
+
+    // ✅ Yangi ustunlarni qo'shish
+    const lastColIndex = worksheet.columnCount;
+    let nextTNumber = maxTestNumber; // Mavjud maksimal raqamdan boshlaymiz
+
+    for (let i = 0; i < answersArray.length; i++) {
+      nextTNumber++;
+      const col = worksheet.getColumn(lastColIndex + i + 1);
+      col.header = `T${nextTNumber}`;
+      col.width = 10;
+    }
+
+    // ✅ ID ustuni ichida test_id ni aniq topish
+    const idValues = worksheet.getColumn(1).values.slice(1);
+    const rowIndex = idValues.findIndex((v) => v === test_id);
+
+    if (rowIndex === -1) {
+      throw new Error(`❌ ID ${test_id} uchun qatorda ma'lumot topilmadi.`);
+    }
+
+    const row = worksheet.getRow(rowIndex + 1);
+
+    let colIndex = lastColIndex + 1;
+    for (const value of answersArray) {
+      row.getCell(colIndex++).value = value;
+    }
+    row.commit();
+
+    await workbook.xlsx.writeFile(filePath);
+    console.log(
+      `✅ ${answersArray.length} ta yangi ustun ${filePath} fayliga qo'shildi (T${maxTestNumber + 1} - T${nextTNumber}).`
+    );
+
+    // 🔹 Ma'lumotlarni DB ga yozish
+    const answersToSave: Partial<TestAnswer>[] = [];
+    const test = await this.testRepository.findOne({ where: { test_id } });
 
     for (const answer of answersArray) {
       answersToSave.push({
@@ -65,7 +119,7 @@ export class TestAnswerService {
     const testAnswer =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
 
-    let countTest=1;
+    let countTest = 1;
 
     for (const ans of testAnswer) {
       if (ans.if_test) {
@@ -112,52 +166,80 @@ export class TestAnswerService {
         worksheet = workbook.getWorksheet("Natijalar")!;
 
         if (!worksheet) {
+          // ✅ Yangi worksheet yaratish
           worksheet = workbook.addWorksheet("Natijalar");
-          worksheet.columns = [
+          const baseColumns = [
             { header: "ID", key: "id", width: 10 },
             { header: "Ism-Familiya", key: "name", width: 20 },
-            { header: "Region", key: "region", width: 15 },
-            { header: "Savol-Javoblar", key: "answer", width: 30 },
+            { header: "Viloyat", key: "region", width: 20 },
           ];
+          for (let i = 1; i <= Object.keys(results).length; i++) {
+            baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
+          }
+          worksheet.columns = baseColumns;
+        } else {
+          // ✅ Mavjud worksheet - ustunlar sonini tekshirish
+          const currentColCount = worksheet.columnCount;
+          const requiredColCount = 3 + Object.keys(results).length; // ID, Name, Region + testlar
+          
+          // ✅ Agar yetarli ustun bo'lmasa, qo'shamiz
+          if (currentColCount < requiredColCount) {
+            const existingTestCount = currentColCount - 3;
+            for (let i = existingTestCount + 1; i <= Object.keys(results).length; i++) {
+              const col = worksheet.getColumn(3 + i);
+              col.header = `T${i}`;
+              col.width = 10;
+            }
+          }
         }
       } catch (error) {
+        // ✅ Xatolik bo'lsa, yangi worksheet yaratamiz
         worksheet = workbook.addWorksheet("Natijalar");
-        worksheet.columns = [
+        const baseColumns = [
           { header: "ID", key: "id", width: 10 },
           { header: "Ism-Familiya", key: "name", width: 20 },
-          { header: "Region", key: "region", width: 15 },
-          { header: "Savol-Javoblar", key: "answer", width: 30 },
+          { header: "Viloyat", key: "region", width: 20 },
         ];
+        for (let i = 1; i <= Object.keys(results).length; i++) {
+          baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
+        }
+        worksheet.columns = baseColumns;
       }
     } else {
+      // ✅ Fayl yo'q bo'lsa, yangi yaratamiz
       worksheet = workbook.addWorksheet("Natijalar");
-      worksheet.columns = [
+      const baseColumns = [
         { header: "ID", key: "id", width: 10 },
         { header: "Ism-Familiya", key: "name", width: 20 },
-        { header: "Region", key: "region", width: 15 },
-        { header: "Savol-Javoblar", key: "answer", width: 30 },
+        { header: "Viloyat", key: "region", width: 20 },
       ];
+      for (let i = 1; i <= Object.keys(results).length; i++) {
+        baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
+      }
+      worksheet.columns = baseColumns;
     }
-    const answersString = Object.entries(results)
-      .map(([key, value]) => `${key}:${value}`)
-      .join(", ");
+
+    // ✅ Yangi qator qo'shish
+    const resultValues = Object.values(results);
     const newRow = worksheet.addRow([
       body.test[0].test_id,
       `${body.testData.firstName} ${body.testData.lastName}`,
       body.testData.region,
-      answersString,
+      ...resultValues,
     ]);
-    await workbook.xlsx.writeFile(filePath);
     newRow.commit();
+
+    // ✅ Faylni saqlash
+    await workbook.xlsx.writeFile(filePath);
+
     const test = await this.testRepository.findOne({
       where: {
-        test_id: body.test[0].test_id
+        test_id: body.test[0].test_id,
       },
     });
-    if(!test){
+    if (!test) {
       return;
     }
-
 
     const userTestCheckCreate = this.userTestCheckRepository.create({
       user: user as User,
@@ -165,6 +247,7 @@ export class TestAnswerService {
     });
 
     await this.userTestCheckRepository.save(userTestCheckCreate);
+    
     const chatId = user?.id_telegram;
     const totalQuestions = Object.keys(results).length;
     const correct = Object.values(results).filter((v) => v === 1).length;
