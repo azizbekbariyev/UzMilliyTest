@@ -75,10 +75,6 @@ export class TestAnswerService {
     const idValues = worksheet.getColumn(1).values.slice(1);
     const rowIndex = idValues.findIndex((v) => v === test_id);
 
-    if (rowIndex === -1) {
-      throw new Error(`❌ ID ${test_id} uchun qatorda ma'lumot topilmadi.`);
-    }
-
     const row = worksheet.getRow(rowIndex + 1);
 
     let colIndex = lastColIndex + 1;
@@ -88,9 +84,6 @@ export class TestAnswerService {
     row.commit();
 
     await workbook.xlsx.writeFile(filePath);
-    console.log(
-      `✅ ${answersArray.length} ta yangi ustun ${filePath} fayliga qo'shildi (T${maxTestNumber + 1} - T${nextTNumber}).`
-    );
 
     // 🔹 Ma'lumotlarni DB ga yozish
     const answersToSave: Partial<TestAnswer>[] = [];
@@ -123,16 +116,15 @@ export class TestAnswerService {
 
     for (const ans of testAnswer) {
       if (ans.if_test) {
-        for (let i = 0; i < ans.option_code; i++) {
+        for (let i = 0; i < 35; i++) {
           const key = `${ans.id}-${i}`;
           const userAns = body.answers[key];
-
           if (userAns) {
             const correctOptions = ans.option
               .replace(/[{}"]/g, "")
               .split(",")
               .map((s: string) => s.split("-")[1].trim());
-
+              
             const correctValue = correctOptions[i];
             results[countTest] = userAns.value === correctValue ? 1 : 0;
           }
@@ -149,7 +141,6 @@ export class TestAnswerService {
         countTest++;
       }
     }
-
     const uploadsDir = path.join(process.cwd(), "uploads");
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
