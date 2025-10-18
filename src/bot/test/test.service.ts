@@ -36,7 +36,7 @@ export class TestService {
     ctx.session.scienceText = ctx.callbackQuery!["data"].split("_")[1];
     ctx.session.countTest = true;
     ctx.reply(
-      "Sizning testingiz kodi yozing\n\nM18"
+      "Sizning testingiz kodi yozing\n\nSh1"
     );
   }
 

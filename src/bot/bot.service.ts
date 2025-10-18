@@ -239,7 +239,7 @@ export class BotService {
           ctx.session.openTest = true;
           ctx.session.countTest = false;
           await ctx.reply(
-            "Yopiq test javoblarini quyidagicha yozing:\n\nA,A,B,C,D... yoki 1-A,2-B,3-C..."
+            "Yopiq test javoblarini quyidagicha yozing:\n\n1-A,2-B,3-C..."
           );
         }
       } else if (ctx.session.openTest) {
