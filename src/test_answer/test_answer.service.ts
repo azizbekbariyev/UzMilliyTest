@@ -86,14 +86,14 @@ export class TestAnswerService {
     });
     await this.testRepository.save(test);
 
-    const ochiqTestlarString = `{${Object.entries(answersArray.ochiq_testlar)
+    const yopiqTestlarString = `{${Object.entries(answersArray.yopiq_testlar)
       .map(([key, value]) => `"${key}-${value}"`)
       .join(",")}}`;
 
     const testAnswer = this.testAnswerRepository.create({
       if_test: true,
       option_code: "35",
-      option: ochiqTestlarString,
+      option: yopiqTestlarString,
       test: {
         id: test.id,
       },
