@@ -80,7 +80,7 @@ export class TestAnswerService {
 
     const test = this.testRepository.create({
       test_id: test_id,
-      subject_name: answersArray.subject.name,
+      subject_name: answersArray.subject.value,
       is_it_over: false,
       science: { id: answersArray.subject.id },
     });
