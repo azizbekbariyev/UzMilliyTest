@@ -30,7 +30,7 @@ export class TestAnswerService {
     @InjectRepository(UserTestCheck)
     private readonly userTestCheckRepository: Repository<UserTestCheck>,
     @InjectRepository(Science)
-    private readonly scienceRepository: Repository<Science>,
+    private readonly scienceRepository: Repository<Science>
   ) {}
 
   async getTestAnswerWithTestId(test_id: string) {
@@ -40,10 +40,76 @@ export class TestAnswerService {
   }
 
   async addTestAnswer(test_id: string, answersArray: AddTestAnswer) {
-    const filePath = join(process.cwd(), "uploads", `${answersArray.test_id}.xlsx`);
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify([]));
+    const uploadsDir = join(process.cwd(), "uploads");
+    if (!fs.existsSync(uploadsDir))
+      fs.mkdirSync(uploadsDir, { recursive: true });
+
+    const filePath = path.join(uploadsDir, `${test_id}.xlsx`);
+    const workbook = new ExcelJS.Workbook();
+    let worksheet: ExcelJS.Worksheet;
+
+    // Fayl mavjudligini tekshiramiz
+    if (fs.existsSync(filePath)) {
+      await workbook.xlsx.readFile(filePath);
+      const existingSheet = workbook.getWorksheet("Natijalar");
+      worksheet = existingSheet
+        ? existingSheet
+        : workbook.addWorksheet("Natijalar");
+    } else {
+      worksheet = workbook.addWorksheet("Natijalar");
     }
+
+    // Testlar sonini hisoblaymiz
+    const yopiq = Object.keys(answersArray.yopiq_testlar || {});
+    const ochiq = Object.keys(answersArray.ochiq_testlar || {});
+    const totalTests = yopiq.length + ochiq.length;
+
+    // Ustunlarni yaratamiz
+    const baseColumns: Partial<ExcelJS.Column>[] = [
+      { header: "ID", key: "id", width: 10 },
+      { header: "Ism-Familiya", key: "name", width: 20 },
+      { header: "Viloyat", key: "region", width: 20 },
+    ];
+    for (let i = 1; i <= totalTests; i++) {
+      baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
+    }
+    worksheet.columns = baseColumns as ExcelJS.Column[];
+
+    // Faylni saqlaymiz
+    await workbook.xlsx.writeFile(filePath);
+
+    const test = this.testRepository.create({
+      test_id: test_id,
+      subject_name: answersArray.subject.name,
+      is_it_over: false,
+      science: { id: answersArray.subject.id },
+    });
+    await this.testRepository.save(test);
+
+    const ochiqTestlarString = `{${Object.entries(answersArray.ochiq_testlar)
+      .map(([key, value]) => `"${key}-${value}"`)
+      .join(",")}}`;
+
+    const testAnswer = this.testAnswerRepository.create({
+      if_test: true,
+      option_code: "35",
+      option: ochiqTestlarString,
+      test: {
+        id: test.id,
+      },
+    });
+    await this.testAnswerRepository.save(testAnswer);
+
+    for (const [key, value] of Object.entries(answersArray.ochiq_testlar)) {
+      const openAnswer = this.testAnswerRepository.create({
+        if_test: false,
+        option_code: '0',
+        option: value,
+        test: { id: test.id },
+      });
+      await this.testAnswerRepository.save(openAnswer);
+    }
+    return {message: 'success'}
   }
 
   async checkTestAnswer(test_id: string, body: CheckTestAnswerDto) {
@@ -69,7 +135,7 @@ export class TestAnswerService {
               .replace(/[{}"]/g, "")
               .split(",")
               .map((s: string) => s.split("-")[1].trim());
-              
+
             const correctValue = correctOptions[i];
             results[countTest] = userAns.value === correctValue ? 1 : 0;
           }
@@ -117,11 +183,15 @@ export class TestAnswerService {
           // ✅ Mavjud worksheet - ustunlar sonini tekshirish
           const currentColCount = worksheet.columnCount;
           const requiredColCount = 3 + Object.keys(results).length; // ID, Name, Region + testlar
-          
+
           // ✅ Agar yetarli ustun bo'lmasa, qo'shamiz
           if (currentColCount < requiredColCount) {
             const existingTestCount = currentColCount - 3;
-            for (let i = existingTestCount + 1; i <= Object.keys(results).length; i++) {
+            for (
+              let i = existingTestCount + 1;
+              i <= Object.keys(results).length;
+              i++
+            ) {
               const col = worksheet.getColumn(3 + i);
               col.header = `T${i}`;
               col.width = 10;
@@ -183,7 +253,7 @@ export class TestAnswerService {
     });
 
     await this.userTestCheckRepository.save(userTestCheckCreate);
-    
+
     const chatId = user?.id_telegram;
     const totalQuestions = Object.keys(results).length;
     const correct = Object.values(results).filter((v) => v === 1).length;
@@ -223,13 +293,15 @@ export class TestAnswerService {
     }
   }
 
-  getScience(){
-    return this.scienceRepository.find()
+  getScience() {
+    return this.scienceRepository.find();
   }
 
-  async findTest(testId:string){
-    const test = await this.testRepository.findOne({where: {test_id: testId}})
-    if(test){
+  async findTest(testId: string) {
+    const test = await this.testRepository.findOne({
+      where: { test_id: testId },
+    });
+    if (test) {
       return true;
     }
     return false;
