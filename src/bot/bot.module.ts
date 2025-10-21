@@ -10,9 +10,10 @@ import { Science } from "./models/science";
 import { TestAnswer } from "./models/test_answer";
 import { TestUpdate } from "./test/test.update";
 import { TestService } from "./test/test.service";
+import { UserTestCheck } from "./models/userTestCheck";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Test, Science, TestAnswer])],
+  imports: [TypeOrmModule.forFeature([User, Test, Science, TestAnswer, UserTestCheck, Science])],
   providers: [
     BotService,
     AdminService,

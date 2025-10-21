@@ -16,3 +16,10 @@ interface SessionText{
 export interface MyContext extends TelegrafContext {
   session: Session & SessionText;
 }
+
+export interface AddTestAnswer {
+  test_id: string;
+  subject: string;
+  yopiq_testlar: Record<string | number, string>;
+  ochiq_testlar: Record<string, string>;
+}

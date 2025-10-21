@@ -60,6 +60,10 @@ export class BotService {
                   text: "Online testlarni ko'rish",
                   callback_data: "online_tests",
                 },
+                {
+                  text: "Testlarga odamlar javoblari",
+                  callback_data: "view_test_answers",
+                },
               ],
               [
                 {
@@ -211,6 +215,10 @@ export class BotService {
                   text: "Online testlarni ko'rish",
                   callback_data: "online_tests",
                 },
+                {
+                  text: "Testlarga odamlar javoblari",
+                  callback_data: "view_test_answers",
+                },
               ],
               [
                 {
@@ -236,90 +244,10 @@ export class BotService {
           await ctx.reply("Bunday test mavjud");
         } else {
           ctx.session.countTestText = ctx.message!["text"];
-          ctx.session.openTest = true;
           ctx.session.countTest = false;
           await ctx.reply(
             "Yopiq test javoblarini quyidagicha yozing:\n\n1-A,2-B,3-C..."
           );
-        }
-      } else if (ctx.session.openTest) {
-        let text = ctx.message!["text"];
-        
-        // ✅ Agar {"1-A","2-B",...} formatida kelsa, tozalaymiz
-        text = text.replace(/[{}"]/g, ''); // {, }, " belgilarini olib tashlaymiz
-        
-        const filterTest = text.split(",");
-        const filterTestCount = filterTest.length;
-        
-        if (filterTestCount == 35) {
-          ctx.session.openTest = false;
-          const science = await this.scienceRepository.findOne({
-            where: {
-              id: parseInt(ctx.session.scienceText),
-            },
-          });
-
-          if (!science) {
-            throw new Error("Science not found");
-          }
-          const test = await this.testRepository.save({
-            test_id: ctx.session.countTestText.split(",")[0],
-            is_it_over: false,
-            subject_name: science!.name,
-            science,
-          });
-          
-          // ✅ Tozalangan javoblarni saqlaymiz: A,A,B,C... formatida
-          await this.testAnswerRepository.save({
-            option: filterTest,
-            option_code: '35',
-            if_test: true,
-            test,
-          });
-          
-          const workbook = new ExcelJS.Workbook();
-          let worksheet: ExcelJS.Worksheet;
-          const filePath = path.join(
-            process.cwd(),
-            "uploads",
-            `${test.test_id}.xlsx`
-          );
-          const baseColumns = [
-            { header: "ID", key: "id", width: 10 },
-            { header: "Ism-Familiya", key: "name", width: 20 },
-            { header: "Viloyat", key: "region", width: 20 },
-          ];
-          for (let i = 1; i <= 35; i++) {
-            baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
-          }
-          worksheet = workbook.addWorksheet("Natijalar");
-          worksheet.columns = baseColumns
-          const admin = await this.userRepository.findOne({
-            where: {
-              id_telegram: ctx.from!.id,
-            },
-          });
-          await workbook.xlsx.writeFile(filePath);
-          const webAppUrl = `https://bot.shamseducation.uz/admin/test?token=${admin?.token}`;
-          ctx.replyWithHTML(
-            `Ochiq testlarni javoblarini quyida app orqali kirgizsangiz bo'ladi`,
-            {
-              reply_markup: {
-                inline_keyboard: [
-                  [
-                    {
-                      text: "App",
-                      web_app: {
-                        url: webAppUrl,
-                      },
-                    },
-                  ],
-                ],
-              },
-            }
-          );
-        } else {
-          ctx.reply(`Ochiq test javoblari to'liq kiritilmadi!\n\nKiritilgan: ${filterTestCount} ta\nKerak: 35 ta`);
         }
       } else {
         await ctx.replyWithHTML(`Menuni tanlang:`, {
@@ -329,6 +257,10 @@ export class BotService {
                 {
                   text: "Online testlarni ko'rish",
                   callback_data: "online_tests",
+                },
+                {
+                  text: "Testlarga odamlar javoblari",
+                  callback_data: "view_test_answers",
                 },
               ],
               [

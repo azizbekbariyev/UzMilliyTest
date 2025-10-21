@@ -7,11 +7,14 @@ import { TestAnswerRepository } from "./test_answer.repository";
 import { CheckTestAnswerDto } from "./dto/check-test-answer.dto";
 import * as fs from "fs";
 import * as path from "path";
+import { join } from "path";
 import * as ExcelJS from "exceljs";
 import { User } from "src/bot/models/user.model";
 import { TestService } from "src/bot/test/test.service";
 import { UserTestCheck } from "src/bot/models/userTestCheck";
 import { Request } from "express";
+import { AddTestAnswer } from "src/types/context.type";
+import { Science } from "src/bot/models/science";
 
 @Injectable()
 export class TestAnswerService {
@@ -25,7 +28,9 @@ export class TestAnswerService {
     private readonly userRepository: Repository<User>,
     private readonly testService: TestService,
     @InjectRepository(UserTestCheck)
-    private readonly userTestCheckRepository: Repository<UserTestCheck>
+    private readonly userTestCheckRepository: Repository<UserTestCheck>,
+    @InjectRepository(Science)
+    private readonly scienceRepository: Repository<Science>,
   ) {}
 
   async getTestAnswerWithTestId(test_id: string) {
@@ -34,71 +39,11 @@ export class TestAnswerService {
     return testAnswer;
   }
 
-  async addTestAnswer(test_id: string, answersArray: string[]) {
-    const filePath = path.join(process.cwd(), "uploads", `${test_id}.xlsx`);
+  async addTestAnswer(test_id: string, answersArray: AddTestAnswer) {
+    const filePath = join(process.cwd(), "uploads", `${answersArray.test_id}.xlsx`);
     if (!fs.existsSync(filePath)) {
-      throw new Error(`❌ Fayl topilmadi: ${filePath}`);
+      fs.writeFileSync(filePath, JSON.stringify([]));
     }
-
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.readFile(filePath);
-    let worksheet = workbook.getWorksheet("Natijalar");
-    if (!worksheet) worksheet = workbook.addWorksheet("Natijalar");
-
-    // ✅ Mavjud maksimal test raqamini topish
-    let maxTestNumber = 0;
-    const headerRow = worksheet.getRow(1);
-    
-    headerRow.eachCell((cell) => {
-      const value = cell.value?.toString() || "";
-      const match = value.match(/^T(\d+)$/); // T1, T2, T3... formatini topish
-      if (match) {
-        const num = parseInt(match[1]);
-        if (num > maxTestNumber) {
-          maxTestNumber = num;
-        }
-      }
-    });
-
-    // ✅ Yangi ustunlarni qo'shish
-    const lastColIndex = worksheet.columnCount;
-    let nextTNumber = maxTestNumber; // Mavjud maksimal raqamdan boshlaymiz
-
-    for (let i = 0; i < answersArray.length; i++) {
-      nextTNumber++;
-      const col = worksheet.getColumn(lastColIndex + i + 1);
-      col.header = `T${nextTNumber}`;
-      col.width = 10;
-    }
-
-    // ✅ ID ustuni ichida test_id ni aniq topish
-    const idValues = worksheet.getColumn(1).values.slice(1);
-    const rowIndex = idValues.findIndex((v) => v === test_id);
-
-    const row = worksheet.getRow(rowIndex + 1);
-
-    let colIndex = lastColIndex + 1;
-    for (const value of answersArray) {
-      row.getCell(colIndex++).value = value;
-    }
-    row.commit();
-
-    await workbook.xlsx.writeFile(filePath);
-
-    // 🔹 Ma'lumotlarni DB ga yozish
-    const answersToSave: Partial<TestAnswer>[] = [];
-    const test = await this.testRepository.findOne({ where: { test_id } });
-
-    for (const answer of answersArray) {
-      answersToSave.push({
-        option: answer,
-        option_code: "0",
-        if_test: false,
-        test: test as Test,
-      });
-    }
-
-    return this.testAnswerRepository.save(answersToSave);
   }
 
   async checkTestAnswer(test_id: string, body: CheckTestAnswerDto) {
@@ -276,5 +221,17 @@ export class TestAnswerService {
     } else {
       return false;
     }
+  }
+
+  getScience(){
+    return this.scienceRepository.find()
+  }
+
+  async findTest(testId:string){
+    const test = await this.testRepository.findOne({where: {test_id: testId}})
+    if(test){
+      return true;
+    }
+    return false;
   }
 }

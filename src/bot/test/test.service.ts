@@ -8,13 +8,16 @@ import { join } from "path";
 import { InjectBot } from "nestjs-telegraf";
 import { Telegraf } from "telegraf";
 import { BOT_NAME } from "src/app.constants";
+import { UserTestCheck } from "../models/userTestCheck";
 
 @Injectable()
 export class TestService {
   constructor(
     @InjectRepository(Test)
     private readonly testRepository: Repository<Test>,
-    @InjectBot(BOT_NAME) private readonly bot: Telegraf
+    @InjectBot(BOT_NAME) private readonly bot: Telegraf,
+    @InjectRepository(UserTestCheck)
+    private readonly testAnswerUserRepository: Repository<UserTestCheck>
   ) {}
 
   async science(ctx: Context) {
@@ -35,9 +38,7 @@ export class TestService {
   addCountTest(ctx: MyContext) {
     ctx.session.scienceText = ctx.callbackQuery!["data"].split("_")[1];
     ctx.session.countTest = true;
-    ctx.reply(
-      "Sizning testingiz kodi yozing\n\nSh1"
-    );
+    ctx.reply("Sizning testingiz kodi yozing\n\nSh1");
   }
 
   async endTest(ctx: Context) {
@@ -64,7 +65,53 @@ export class TestService {
     });
   }
 
-  async sendTestUser(chatId:number, message:string){
-    await this.bot.telegram.sendMessage(chatId, message)
+  async sendTestUser(chatId: number, message: string) {
+    await this.bot.telegram.sendMessage(chatId, message);
+  }
+
+  async viewTest(ctx: MyContext) {
+    const tests = await this.testRepository.find();
+    await ctx.replyWithHTML(`📋 Testlar ro'yxati:`, {
+      reply_markup: {
+        inline_keyboard: [
+          ...tests.map((test) => [
+            {
+              text: test.test_id,
+              callback_data: `test_view_answer_${test.test_id}`,
+            },
+          ]),
+          [
+            {
+              text: "⬅️ Orqaga",
+              callback_data: "back_to_menu",
+            },
+          ],
+        ],
+      },
+    });
+  }
+
+  async viewTestAnswer(ctx: Context) {
+    const testId = ctx.callbackQuery!["data"].split("_")[3];
+    const testUsers = await this.testAnswerUserRepository.find({
+      where: { test: { test_id: testId } },
+    });
+    const count = testUsers.length;
+
+    await ctx.replyWithHTML(
+      `Ushbu testni <b>${count}</b> ta foydalanuvchi topshirgan ✅`,
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "⬅️ Orqaga",
+                callback_data: "view_test_answers",
+              },
+            ],
+          ],
+        },
+      }
+    );
   }
 }

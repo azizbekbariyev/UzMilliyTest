@@ -8,10 +8,11 @@ import { Test } from "src/bot/models/test.model";
 import { User } from "src/bot/models/user.model";
 import { BotModule } from "src/bot/bot.module";
 import { UserTestCheck } from "src/bot/models/userTestCheck";
+import { Science } from "src/bot/models/science";
 
 
 @Module({
-    imports: [TypeOrmModule.forFeature([TestAnswer , Test, User, UserTestCheck]), BotModule],
+    imports: [TypeOrmModule.forFeature([TestAnswer , Test, User, UserTestCheck, Science]), BotModule],
     controllers: [TestAnswerController],
     providers: [TestAnswerService, TestAnswerRepository],
 })

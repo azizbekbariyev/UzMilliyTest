@@ -5,6 +5,7 @@ import { Test } from "../models/test.model";
 import { Repository } from "typeorm";
 import { Science } from "../models/science";
 import { MyContext } from "src/types/context.type";
+import { User } from "../models/user.model";
 
 @Injectable()
 export class AdminService {
@@ -12,7 +13,9 @@ export class AdminService {
     @InjectRepository(Test)
     private readonly testRepository: Repository<Test>,
     @InjectRepository(Science)
-    private readonly scienceRepository: Repository<Science>
+    private readonly scienceRepository: Repository<Science>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
   ) {}
 
   async onlineTests(ctx: Context) {
@@ -41,7 +44,7 @@ export class AdminService {
 
   async addTest(ctx: Context) {
     const science = await this.scienceRepository.find();
-    if(science.length == 0){
+    if (science.length == 0) {
       await ctx.replyWithHTML("Avval fan qo'shing", {
         reply_markup: {
           inline_keyboard: [
@@ -53,25 +56,36 @@ export class AdminService {
             ],
           ],
         },
-      })
-    }else{
-      await ctx.replyWithHTML(`Test qo'shish uchun fanni tanlang:`, {
-      reply_markup: {
-        inline_keyboard: science.map((item) => {
-          return [
-            {
-              text: item.name,
-              callback_data: `science_${item.id}`,
-            },
-          ];
-        }),
-      },
-    });
+      });
+    } else {
+      const admin = await this.userRepository.findOne({
+        where: {
+          id_telegram: ctx.from!.id,
+        },
+      });
+      const webAppUrl = `https://bot.shamseducation.uz/admin/test?token=${admin?.token}`;
+      ctx.replyWithHTML(
+        `Testlarni javoblarini quyida app orqali kirgizsangiz bo'ladi`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "App",
+                  web_app: {
+                    url: webAppUrl,
+                  },
+                },
+              ],
+            ],
+          },
+        }
+      );
     }
   }
 
   async addScience(ctx: MyContext) {
-    ctx.session.science = true
+    ctx.session.science = true;
     await ctx.reply(`Fan qo'shish uchun nomini kiriting:`);
   }
 }
