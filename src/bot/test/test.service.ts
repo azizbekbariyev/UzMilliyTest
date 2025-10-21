@@ -94,7 +94,7 @@ export class TestService {
   async viewTestAnswer(ctx: Context) {
     const testId = ctx.callbackQuery!["data"].split("_")[3];
     const testUsers = await this.testAnswerUserRepository.find({
-      where: { test: { test_id: testId } },
+      where: { test: { test_id: testId, is_it_over: false } },
     });
     const count = testUsers.length;
 
