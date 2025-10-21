@@ -70,7 +70,9 @@ export class TestService {
   }
 
   async viewTest(ctx: MyContext) {
-    const tests = await this.testRepository.find();
+    const tests = await this.testRepository.find({
+      where: { is_it_over: false },
+    });
     await ctx.replyWithHTML(`📋 Testlar ro'yxati:`, {
       reply_markup: {
         inline_keyboard: [
@@ -94,7 +96,7 @@ export class TestService {
   async viewTestAnswer(ctx: Context) {
     const testId = ctx.callbackQuery!["data"].split("_")[3];
     const testUsers = await this.testAnswerUserRepository.find({
-      where: { test: { test_id: testId, is_it_over: false } },
+      where: { test: { test_id: testId } },
     });
     const count = testUsers.length;
 
