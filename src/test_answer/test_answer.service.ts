@@ -75,7 +75,6 @@ export class TestAnswerService {
     }
     worksheet.columns = baseColumns as ExcelJS.Column[];
 
-    // Faylni saqlaymiz
     await workbook.xlsx.writeFile(filePath);
 
     const test = this.testRepository.create({
@@ -92,7 +91,7 @@ export class TestAnswerService {
 
     const testAnswer = this.testAnswerRepository.create({
       if_test: true,
-      option_code: "35",
+      option_code: answersArray.yopiq_testlar.length,
       option: yopiqTestlarString,
       test: {
         id: test.id,
@@ -100,14 +99,18 @@ export class TestAnswerService {
     });
     await this.testAnswerRepository.save(testAnswer);
 
-    for (const [key, value] of Object.entries(answersArray.ochiq_testlar)) {
-      const openAnswer = this.testAnswerRepository.create({
-        if_test: false,
-        option_code: '0',
-        option: value,
-        test: { id: test.id },
-      });
-      await this.testAnswerRepository.save(openAnswer);
+    if(!answersArray.ochiq_testlar.length){
+      return {message: 'success'}
+    } else{
+      for (const [key, value] of Object.entries(answersArray.ochiq_testlar)) {
+        const openAnswer = this.testAnswerRepository.create({
+          if_test: false,
+          option_code: '0',
+          option: value,
+          test: { id: test.id },
+        });
+        await this.testAnswerRepository.save(openAnswer);
+      }
     }
     return {message: 'success'}
   }
@@ -127,7 +130,7 @@ export class TestAnswerService {
 
     for (const ans of testAnswer) {
       if (ans.if_test) {
-        for (let i = 0; i < 35; i++) {
+        for (let i = 0; i < ans.option_code; i++) {
           const key = `${ans.id}-${i}`;
           const userAns = body.answers[key];
           if (userAns) {
