@@ -66,7 +66,9 @@ export class TestService {
   }
 
   async sendTestUser(chatId: number, message: string) {
-    await this.bot.telegram.sendMessage(chatId, message);
+    const channelUrl = "https://t.me/shamseducation";
+    const fullMessage = `${message}\n\n👉 <a href="${channelUrl}">Kanalga o'tish</a>`;
+    await this.bot.telegram.sendMessage(chatId, fullMessage, { parse_mode: "HTML" });
   }
 
   async viewTest(ctx: MyContext) {

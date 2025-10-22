@@ -255,18 +255,8 @@ export class TestAnswerService {
     await this.userTestCheckRepository.save(userTestCheckCreate);
 
     const chatId = user?.id_telegram;
-    const totalQuestions = Object.keys(results).length;
-    const correct = Object.values(results).filter((v) => v === 1).length;
-    const incorrect = Object.values(results).filter((v) => v === 0).length;
 
-    const message = `📊 *Test natijalari* 📊
-
-🧾 *Test kodi:* ${body.test[0].test_id}
-❓ *Savollar soni:* ${totalQuestions}
-
-✅ *To'g'ri javoblar:* ${correct}
-❌ *Xato javoblar:* ${incorrect}
-`;
+    const message = `📊 Test natijalaringiz yuborildi 📊\n\nNatijalarni quyidagi kanal orqali ko'rishingiz mumkin`;
     this.testService.sendTestUser(chatId!, message);
     return results;
   }
