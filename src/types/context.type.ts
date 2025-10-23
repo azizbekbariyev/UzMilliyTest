@@ -19,9 +19,15 @@ export interface MyContext extends TelegrafContext {
 
 export interface AddTestAnswer {
   subject: {
-    id:number,
-    value:string
+    id: number;
+    value: string;
   };
-  yopiq_testlar: Record<string | number, string>;
+  yopiq_testlar: Record<string, TestVariant>;
   ochiq_testlar: Record<string, string>;
+  open_test_sequential?: boolean;
+}
+
+export interface TestVariant {
+  test_variants: string[];
+  correct_variant: string;
 }

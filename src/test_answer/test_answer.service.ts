@@ -82,37 +82,42 @@ export class TestAnswerService {
       subject_name: answersArray.subject.value,
       is_it_over: false,
       science: { id: answersArray.subject.id },
+      open_test_sequential: answersArray.open_test_sequential,
     });
     await this.testRepository.save(test);
 
-    const yopiqTestlarString = `{${Object.entries(answersArray.yopiq_testlar)
-      .map(([key, value]) => `"${key}-${value}"`)
-      .join(",")}}`;
+    if (answersArray.yopiq_testlar.length) {
+      console.log("shu yerda1 ")
+      return { message: "success" };
+    } else {
+      for (const [key, value] of Object.entries(answersArray.yopiq_testlar)) {
+        const testAnswer = this.testAnswerRepository.create({
+          if_test: true,
+          option_code: value.test_variants.join(","),
+          option: value.correct_variant,
+          test: {
+            id: test.id,
+          },
+        });
+        await this.testAnswerRepository.save(testAnswer);
+      }
+    }
 
-    const testAnswer = this.testAnswerRepository.create({
-      if_test: true,
-      option_code: answersArray.yopiq_testlar.length,
-      option: yopiqTestlarString,
-      test: {
-        id: test.id,
-      },
-    });
-    await this.testAnswerRepository.save(testAnswer);
-
-    if(!answersArray.ochiq_testlar.length){
-      return {message: 'success'}
-    } else{
+    if (answersArray.ochiq_testlar.length) {
+      console.log("shu yerda2 ")
+      return { message: "success" };
+    } else {
       for (const [key, value] of Object.entries(answersArray.ochiq_testlar)) {
         const openAnswer = this.testAnswerRepository.create({
           if_test: false,
-          option_code: '0',
+          option_code: "0",
           option: value,
           test: { id: test.id },
         });
         await this.testAnswerRepository.save(openAnswer);
       }
     }
-    return {message: 'success'}
+    return { message: "success" };
   }
 
   async checkTestAnswer(test_id: string, body: CheckTestAnswerDto) {
@@ -290,7 +295,7 @@ export class TestAnswerService {
     return this.scienceRepository.find();
   }
 
-  async findTest(testId: string) {
+  async   findTest(testId: string) {
     const test = await this.testRepository.findOne({
       where: { test_id: testId },
     });

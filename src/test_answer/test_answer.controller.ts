@@ -40,8 +40,8 @@ export class TestAnswerController {
     return this.testAnswerService.getScience();
   }
 
-  @Get('/:test_id')
-  findTest(@Param('test_id') testId:string) {
-    return this.testAnswerService.findTest(testId)
+  @Get("/:test_id")
+  findTest(@Param("test_id") testId: string) {
+    return this.testAnswerService.findTest(testId);
   }
 }

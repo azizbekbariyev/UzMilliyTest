@@ -20,6 +20,9 @@ export class Test {
   @Column()
   is_it_over: boolean;
 
+  @Column()
+  open_test_sequential: boolean;
+
   @OneToMany(() => TestAnswer, (answer) => answer.test)
   answers: TestAnswer[];
 
