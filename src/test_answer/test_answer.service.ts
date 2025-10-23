@@ -94,7 +94,6 @@ export class TestAnswerService {
     await this.testRepository.save(test);
 
     if (answersArray.yopiq_testlar.length) {
-      console.log("shu yerda1 ")
       return { message: "success" };
     } else {
       for (const [key, value] of Object.entries(answersArray.yopiq_testlar)) {
@@ -112,7 +111,6 @@ export class TestAnswerService {
     }
 
     if (answersArray.ochiq_testlar.length) {
-      console.log("shu yerda2 ")
       return { message: "success" };
     } else {
       for (const [key, value] of Object.entries(answersArray.ochiq_testlar)) {
@@ -121,7 +119,7 @@ export class TestAnswerService {
           option_code: "0",
           option: value,
           test: { id: test.id },
-          test_number:Number(key),
+          test_number:Number(key.split('-')[0])
         });
         await this.testAnswerRepository.save(openAnswer);
       }
