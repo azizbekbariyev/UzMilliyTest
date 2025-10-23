@@ -36,14 +36,14 @@ export class TestAnswerService {
   async getTestAnswerWithTestId(test_id: string) {
     const testAnswer =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
-    return testAnswer.map((testAns)=>{
+    return testAnswer.map((testAns) => {
       return {
         id: testAns.id,
         test_number: testAns.test_number,
         if_test: testAns.if_test,
         option_code: testAns.option_code,
-      }
-    })
+      };
+    });
   }
 
   async addTestAnswer(test_id: string, answersArray: AddTestAnswer) {
@@ -104,7 +104,7 @@ export class TestAnswerService {
           test: {
             id: test.id,
           },
-          test_number:Number(key),
+          test_number: Number(key),
         });
         await this.testAnswerRepository.save(testAnswer);
       }
@@ -119,7 +119,7 @@ export class TestAnswerService {
           option_code: "0",
           option: value,
           test: { id: test.id },
-          test_number:Number(key.split('-')[0])
+          test_number: Number(key.split("-")[0]),
         });
         await this.testAnswerRepository.save(openAnswer);
       }
@@ -129,105 +129,50 @@ export class TestAnswerService {
 
   async checkTestAnswer(test_id: string, body: CheckTestAnswerDto) {
     const user = await this.userRepository.findOne({
-      where: {
-        token: body.token,
-      },
+      where: { token: body.token },
     });
+    if (!user) throw new Error("User not found");
 
-    let results: Record<string, number> = {};
-    const testAnswer =
+    const testAnswers =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
+    const results: Record<number, number> = {};
 
-    let countTest = 1;
+    // 🔹 Javoblarni solishtirish
+    for (const userAns of body.answers) {
+      const correct = testAnswers.find(
+        (t) => t.test_number === userAns.test_number
+      );
+      if (!correct) continue;
 
-    for (const ans of testAnswer) {
-      if (ans.if_test) {
-        for (let i = 0; i < ans.option_code; i++) {
-          const key = `${ans.id}-${i}`;
-          const userAns = body.answers[key];
-          if (userAns) {
-            const correctOptions = ans.option
-              .replace(/[{}"]/g, "")
-              .split(",")
-              .map((s: string) => s.split("-")[1].trim());
-
-            const correctValue = correctOptions[i];
-            results[countTest] = userAns.value === correctValue ? 1 : 0;
-          }
-          countTest++;
-        }
+      if (userAns.if_test) {
+        // Yopiq test
+        results[userAns.test_number] =
+          userAns.answer === correct.option ? 1 : 0;
       } else {
-        const userAns = body.answers[ans.id];
-
-        if (userAns) {
-          results[`${countTest}`] = userAns.value === ans.option ? 1 : 0;
-        } else {
-          results[`${countTest}`] = 0;
-        }
-        countTest++;
+        // Ochiq test
+        const normalize = (s: string) => s.trim().toLowerCase();
+        results[userAns.test_number] =
+          normalize(userAns.answer) === normalize(correct.option) ? 1 : 0;
       }
     }
+
+    // 🔹 Excel fayl yo‘lini yaratish
     const uploadsDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadsDir)) {
+    if (!fs.existsSync(uploadsDir))
       fs.mkdirSync(uploadsDir, { recursive: true });
-    }
 
     const filePath = path.join(uploadsDir, `${body.test[0].test_id}.xlsx`);
-
     const workbook = new ExcelJS.Workbook();
     let worksheet: ExcelJS.Worksheet;
 
-    if (fs.existsSync(filePath)) {
-      try {
+    // 🔹 Mavjud faylni o‘qish yoki yangisini yaratish
+    try {
+      if (fs.existsSync(filePath)) {
         await workbook.xlsx.readFile(filePath);
-        worksheet = workbook.getWorksheet("Natijalar")!;
-
-        if (!worksheet) {
-          // ✅ Yangi worksheet yaratish
-          worksheet = workbook.addWorksheet("Natijalar");
-          const baseColumns = [
-            { header: "ID", key: "id", width: 10 },
-            { header: "Ism-Familiya", key: "name", width: 20 },
-            { header: "Viloyat", key: "region", width: 20 },
-          ];
-          for (let i = 1; i <= Object.keys(results).length; i++) {
-            baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
-          }
-          worksheet.columns = baseColumns;
-        } else {
-          // ✅ Mavjud worksheet - ustunlar sonini tekshirish
-          const currentColCount = worksheet.columnCount;
-          const requiredColCount = 3 + Object.keys(results).length; // ID, Name, Region + testlar
-
-          // ✅ Agar yetarli ustun bo'lmasa, qo'shamiz
-          if (currentColCount < requiredColCount) {
-            const existingTestCount = currentColCount - 3;
-            for (
-              let i = existingTestCount + 1;
-              i <= Object.keys(results).length;
-              i++
-            ) {
-              const col = worksheet.getColumn(3 + i);
-              col.header = `T${i}`;
-              col.width = 10;
-            }
-          }
-        }
-      } catch (error) {
-        // ✅ Xatolik bo'lsa, yangi worksheet yaratamiz
-        worksheet = workbook.addWorksheet("Natijalar");
-        const baseColumns = [
-          { header: "ID", key: "id", width: 10 },
-          { header: "Ism-Familiya", key: "name", width: 20 },
-          { header: "Viloyat", key: "region", width: 20 },
-        ];
-        for (let i = 1; i <= Object.keys(results).length; i++) {
-          baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
-        }
-        worksheet.columns = baseColumns;
-      }
-    } else {
-      // ✅ Fayl yo'q bo'lsa, yangi yaratamiz
+        worksheet = workbook.getWorksheet("Natijalar") as ExcelJS.Worksheet;
+        if (!worksheet) throw new Error();
+      } else throw new Error();
+    } catch {
       worksheet = workbook.addWorksheet("Natijalar");
       const baseColumns = [
         { header: "ID", key: "id", width: 10 },
@@ -240,39 +185,34 @@ export class TestAnswerService {
       worksheet.columns = baseColumns;
     }
 
-    // ✅ Yangi qator qo'shish
-    const resultValues = Object.values(results);
+    // 🔹 Natijani yangi qator sifatida qo‘shish
     const newRow = worksheet.addRow([
       body.test[0].test_id,
       `${body.testData.firstName} ${body.testData.lastName}`,
       body.testData.region,
-      ...resultValues,
+      ...Object.values(results),
     ]);
     newRow.commit();
 
-    // ✅ Faylni saqlash
     await workbook.xlsx.writeFile(filePath);
 
+    // 🔹 Testni topish va user bilan bog‘lash
     const test = await this.testRepository.findOne({
-      where: {
-        test_id: body.test[0].test_id,
-      },
+      where: { test_id: body.test[0].test_id },
     });
-    if (!test) {
-      return;
-    }
+    if (!test) return;
 
-    const userTestCheckCreate = this.userTestCheckRepository.create({
+    const userTestCheck = this.userTestCheckRepository.create({
       user: user as User,
       test: test as Test,
     });
+    await this.userTestCheckRepository.save(userTestCheck);
 
-    await this.userTestCheckRepository.save(userTestCheckCreate);
-
-    const chatId = user?.id_telegram;
-
-    const message = `📊 Test natijalaringiz yuborildi 📊\n\nNatijalarni quyidagi kanal orqali ko'rishingiz mumkin`;
+    // 🔹 Telegramga xabar yuborish
+    const chatId = user.id_telegram;
+    const message = `📊 Test natijalaringiz yuborildi 📊\n\nNatijalarni quyidagi kanal orqali ko‘rishingiz mumkin.`;
     this.testService.sendTestUser(chatId!, message);
+
     return results;
   }
 
@@ -302,7 +242,7 @@ export class TestAnswerService {
     return this.scienceRepository.find();
   }
 
-  async   findTest(testId: string) {
+  async findTest(testId: string) {
     const test = await this.testRepository.findOne({
       where: { test_id: testId },
     });

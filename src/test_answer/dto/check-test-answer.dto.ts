@@ -17,11 +17,30 @@ class TestInfoDto {
   name: string;
 }
 
-export class CheckTestAnswerDto {
-  answers: { 
-    [id: string]: { value: string; if_test: boolean } 
-  };
-  testData: TestDataDto;
-  test: TestInfoDto[];
+export interface CheckTestAnswerDto {
+  test_id: string;
   token: string;
+  answers: {
+    question_id: number;
+    test_number: number;
+    answer: string;
+    if_test: boolean;
+  }[];
+  testData: {
+    code: string;
+    firstName: string;
+    lastName: string;
+    region: string;
+    startTime: string;
+    testId: string;
+  };
+  test: {
+    id: number;
+    is_it_over: boolean;
+    name: string;
+    open_test_sequential: boolean;
+    science_id: number;
+    subject_name: string;
+    test_id: string;
+  }[];
 }
