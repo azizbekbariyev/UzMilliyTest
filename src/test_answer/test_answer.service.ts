@@ -36,7 +36,14 @@ export class TestAnswerService {
   async getTestAnswerWithTestId(test_id: string) {
     const testAnswer =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
-    return testAnswer;
+    return testAnswer.map((testAns)=>{
+      return {
+        id: testAns.id,
+        test_number: testAns.test_number,
+        if_test: testAns.if_test,
+        option_code: testAns.option_code,
+      }
+    })
   }
 
   async addTestAnswer(test_id: string, answersArray: AddTestAnswer) {
@@ -98,6 +105,7 @@ export class TestAnswerService {
           test: {
             id: test.id,
           },
+          test_number:Number(key),
         });
         await this.testAnswerRepository.save(testAnswer);
       }
@@ -113,6 +121,7 @@ export class TestAnswerService {
           option_code: "0",
           option: value,
           test: { id: test.id },
+          test_number:Number(key),
         });
         await this.testAnswerRepository.save(openAnswer);
       }

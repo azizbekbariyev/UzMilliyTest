@@ -17,6 +17,9 @@ export class TestAnswer {
   @Column()
   option_code: string;
 
+  @Column()
+  test_number: number;
+
   @ManyToOne(() => Test, (test) => test.answers, { onDelete: "CASCADE" })
   @JoinColumn({ name: "test_id" })
   test: Test;
