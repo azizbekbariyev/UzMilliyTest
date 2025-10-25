@@ -9,8 +9,6 @@ import { MyContext } from "src/types/context.type";
 import { Science } from "./models/science";
 import { TestAnswer } from "./models/test_answer";
 import { Test } from "./models/test.model";
-import * as ExcelJS from "exceljs";
-import * as path from "path";
 import { randomBytes } from "crypto";
 
 @Injectable()
@@ -35,13 +33,15 @@ export class BotService {
     const admin1 = Number(process.env.ADMIN1);
     const admin2 = Number(process.env.ADMIN2);
     const admin3 = Number(process.env.ADMIN3);
+    const admin4 = Number(process.env.ADMIN4);
     ctx.session.science = false;
     ctx.session.countTest = false;
     ctx.session.openTest = false;
     if (
       ctx.from?.id == admin1 ||
       ctx.from?.id == admin2 ||
-      ctx.from?.id == admin3
+      ctx.from?.id == admin3 ||
+      ctx.from?.id == admin4
     ) {
       const adminRepo = await this.userRepository.findOne({
         where: {
@@ -184,10 +184,12 @@ export class BotService {
     const admin1 = process.env.ADMIN1;
     const admin2 = process.env.ADMIN2;
     const admin3 = process.env.ADMIN3;
+    const admin4 = process.env.ADMIN4;
     if (
       ctx.from?.id == admin1 ||
       ctx.from?.id == admin2 ||
-      ctx.from?.id == admin3
+      ctx.from?.id == admin3 ||
+      ctx.from?.id == admin4
     ) {
       if (ctx.session.name) {
         ctx.session.name = false;
