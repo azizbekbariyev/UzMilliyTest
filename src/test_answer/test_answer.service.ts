@@ -95,7 +95,6 @@ export class TestAnswerService {
       !answersArray.yopiq_testlar ||
       Object.keys(answersArray.yopiq_testlar).length === 0
     ) {
-      console.log("Yopiq testlar yo'q");
     } else {
       for (const [key, value] of Object.entries(answersArray.yopiq_testlar)) {
         const testAnswer = this.testAnswerRepository.create({
@@ -114,7 +113,6 @@ export class TestAnswerService {
       !answersArray.ochiq_testlar ||
       Object.keys(answersArray.ochiq_testlar).length === 0
     ) {
-      console.log("Ochiq testlar yo'q");
     } else {
       for (const [key, value] of Object.entries(answersArray.ochiq_testlar)) {
         const openAnswer = this.testAnswerRepository.create({
@@ -166,8 +164,8 @@ export class TestAnswerService {
         // test_number_string: "3-a", "3-b" yoki "3"
         correct = testAnswers.find(
           (t) =>
-            t.test_number_string === String(userAns.test_number) &&
-            t.if_test === false
+            t.test_number_string == String(userAns.test_number) &&
+            t.if_test == false
         );
 
         if (correct) {
@@ -190,6 +188,7 @@ export class TestAnswerService {
         }
       }
     }
+
 
     // ✅ Excel fayl
     const uploadsDir = path.join(process.cwd(), "uploads");
@@ -215,7 +214,7 @@ export class TestAnswerService {
       ];
 
       // Barcha testlar sonini hisoblash
-      const totalTests = body.answers.length;
+      const totalTests = testAnswers.length;
       for (let i = 1; i <= totalTests; i++) {
         baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
       }

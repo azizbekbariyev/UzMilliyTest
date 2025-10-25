@@ -25,6 +25,7 @@ export interface CheckTestAnswerDto {
     test_number: number | string;
     answer: string;
     if_test: boolean;
+    test_number_string: string
   }[];
   testData: {
     code: string;
