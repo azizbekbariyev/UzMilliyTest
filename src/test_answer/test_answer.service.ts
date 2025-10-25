@@ -140,16 +140,21 @@ export class TestAnswerService {
 
     const testAnswers =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
-    const results: Record<string, number> = {}; // ✅ string key
+
+    // Test formatini aniqlash
+    const isSequential = body.test?.[0]?.open_test_sequential === true;
+
+    const results: Record<string, number> = {};
 
     // ✅ Javoblarni solishtirish
     for (const userAns of body.answers) {
       let correct;
 
       if (userAns.if_test) {
-        // Yopiq test - raqam bilan solishtirish
+        // ✅ Yopiq test - raqam bilan solishtirish
         correct = testAnswers.find(
-          (t) => t.test_number === userAns.test_number && t.if_test === true
+          (t) =>
+            t.test_number === Number(userAns.test_number) && t.if_test === true
         );
 
         if (correct) {
@@ -157,7 +162,8 @@ export class TestAnswerService {
           results[key] = userAns.answer === correct.option ? 1 : 0;
         }
       } else {
-        // Ochiq test - string bilan solishtirish
+        // ✅ Ochiq test - string bilan solishtirish
+        // test_number_string: "3-a", "3-b" yoki "3"
         correct = testAnswers.find(
           (t) =>
             t.test_number_string === String(userAns.test_number) &&
@@ -169,6 +175,18 @@ export class TestAnswerService {
           const key = String(userAns.test_number);
           results[key] =
             normalize(userAns.answer) === normalize(correct.option) ? 1 : 0;
+        } else {
+          // Debug uchun
+          console.log("Ochiq test topilmadi:", {
+            userTestNumber: userAns.test_number,
+            availableTests: testAnswers
+              .filter((t) => !t.if_test)
+              .map((t) => ({
+                id: t.id,
+                test_number_string: t.test_number_string,
+                option: t.option,
+              })),
+          });
         }
       }
     }
@@ -195,7 +213,10 @@ export class TestAnswerService {
         { header: "Ism-Familiya", key: "name", width: 20 },
         { header: "Viloyat", key: "region", width: 20 },
       ];
-      for (let i = 1; i <= Object.keys(results).length; i++) {
+
+      // Barcha testlar sonini hisoblash
+      const totalTests = body.answers.length;
+      for (let i = 1; i <= totalTests; i++) {
         baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
       }
       worksheet.columns = baseColumns;
