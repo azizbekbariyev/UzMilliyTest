@@ -55,7 +55,6 @@ export class TestAnswerService {
     const workbook = new ExcelJS.Workbook();
     let worksheet: ExcelJS.Worksheet;
 
-    // Fayl mavjudligini tekshiramiz
     if (fs.existsSync(filePath)) {
       await workbook.xlsx.readFile(filePath);
       const existingSheet = workbook.getWorksheet("Natijalar");
@@ -66,12 +65,10 @@ export class TestAnswerService {
       worksheet = workbook.addWorksheet("Natijalar");
     }
 
-    // Testlar sonini hisoblaymiz
     const yopiq = Object.keys(answersArray.yopiq_testlar || {});
     const ochiq = Object.keys(answersArray.ochiq_testlar || {});
     const totalTests = yopiq.length + ochiq.length;
 
-    // Ustunlarni yaratamiz
     const baseColumns: Partial<ExcelJS.Column>[] = [
       { header: "ID", key: "id", width: 10 },
       { header: "Ism-Familiya", key: "name", width: 20 },
@@ -93,25 +90,31 @@ export class TestAnswerService {
     });
     await this.testRepository.save(test);
 
-    if (answersArray.yopiq_testlar.length) {
-      return { message: "success" };
+    // ✅ Yopiq testlar
+    if (
+      !answersArray.yopiq_testlar ||
+      Object.keys(answersArray.yopiq_testlar).length === 0
+    ) {
+      console.log("Yopiq testlar yo'q");
     } else {
       for (const [key, value] of Object.entries(answersArray.yopiq_testlar)) {
         const testAnswer = this.testAnswerRepository.create({
           if_test: true,
           option_code: value.test_variants.join(","),
           option: value.correct_variant,
-          test: {
-            id: test.id,
-          },
+          test: { id: test.id },
           test_number: Number(key),
         });
         await this.testAnswerRepository.save(testAnswer);
       }
     }
 
-    if (answersArray.ochiq_testlar.length) {
-      return { message: "success" };
+    // ✅ Ochiq testlar - test_number ni string sifatida saqlash
+    if (
+      !answersArray.ochiq_testlar ||
+      Object.keys(answersArray.ochiq_testlar).length === 0
+    ) {
+      console.log("Ochiq testlar yo'q");
     } else {
       for (const [key, value] of Object.entries(answersArray.ochiq_testlar)) {
         const openAnswer = this.testAnswerRepository.create({
@@ -119,11 +122,13 @@ export class TestAnswerService {
           option_code: "0",
           option: value,
           test: { id: test.id },
-          test_number: Number(key.split("-")[0]),
+          test_number_string: key, // ✅ Yangi maydon: "36-a", "36-b" yoki "36"
+          test_number: Number(key.split("-")[0]), // ✅ Eski maydon: faqat raqam qismi
         });
         await this.testAnswerRepository.save(openAnswer);
       }
     }
+
     return { message: "success" };
   }
 
@@ -135,28 +140,40 @@ export class TestAnswerService {
 
     const testAnswers =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
-    const results: Record<number, number> = {};
+    const results: Record<string, number> = {}; // ✅ string key
 
-    // 🔹 Javoblarni solishtirish
+    // ✅ Javoblarni solishtirish
     for (const userAns of body.answers) {
-      const correct = testAnswers.find(
-        (t) => t.test_number === userAns.test_number
-      );
-      if (!correct) continue;
+      let correct;
 
       if (userAns.if_test) {
-        // Yopiq test
-        results[userAns.test_number] =
-          userAns.answer === correct.option ? 1 : 0;
+        // Yopiq test - raqam bilan solishtirish
+        correct = testAnswers.find(
+          (t) => t.test_number === userAns.test_number && t.if_test === true
+        );
+
+        if (correct) {
+          const key = String(userAns.test_number);
+          results[key] = userAns.answer === correct.option ? 1 : 0;
+        }
       } else {
-        // Ochiq test
-        const normalize = (s: string) => s.trim().toLowerCase();
-        results[userAns.test_number] =
-          normalize(userAns.answer) === normalize(correct.option) ? 1 : 0;
+        // Ochiq test - string bilan solishtirish
+        correct = testAnswers.find(
+          (t) =>
+            t.test_number_string === String(userAns.test_number) &&
+            t.if_test === false
+        );
+
+        if (correct) {
+          const normalize = (s: string) => s.trim().toLowerCase();
+          const key = String(userAns.test_number);
+          results[key] =
+            normalize(userAns.answer) === normalize(correct.option) ? 1 : 0;
+        }
       }
     }
 
-    // 🔹 Excel fayl yo‘lini yaratish
+    // ✅ Excel fayl
     const uploadsDir = path.join(process.cwd(), "uploads");
     if (!fs.existsSync(uploadsDir))
       fs.mkdirSync(uploadsDir, { recursive: true });
@@ -165,7 +182,6 @@ export class TestAnswerService {
     const workbook = new ExcelJS.Workbook();
     let worksheet: ExcelJS.Worksheet;
 
-    // 🔹 Mavjud faylni o‘qish yoki yangisini yaratish
     try {
       if (fs.existsSync(filePath)) {
         await workbook.xlsx.readFile(filePath);
@@ -185,7 +201,6 @@ export class TestAnswerService {
       worksheet.columns = baseColumns;
     }
 
-    // 🔹 Natijani yangi qator sifatida qo‘shish
     const newRow = worksheet.addRow([
       body.test[0].test_id,
       `${body.testData.firstName} ${body.testData.lastName}`,
@@ -196,7 +211,6 @@ export class TestAnswerService {
 
     await workbook.xlsx.writeFile(filePath);
 
-    // 🔹 Testni topish va user bilan bog‘lash
     const test = await this.testRepository.findOne({
       where: { test_id: body.test[0].test_id },
     });
@@ -208,9 +222,8 @@ export class TestAnswerService {
     });
     await this.userTestCheckRepository.save(userTestCheck);
 
-    // 🔹 Telegramga xabar yuborish
     const chatId = user.id_telegram;
-    const message = `📊 Test natijalaringiz yuborildi 📊\n\nNatijalarni quyidagi kanal orqali ko‘rishingiz mumkin.`;
+    const message = `📊 Test natijalaringiz yuborildi 📊\n\nNatijalarni quyidagi kanal orqali ko'rishingiz mumkin.`;
     this.testService.sendTestUser(chatId!, message);
 
     return results;

@@ -22,7 +22,7 @@ export interface CheckTestAnswerDto {
   token: string;
   answers: {
     question_id: number;
-    test_number: number;
+    test_number: number | string;
     answer: string;
     if_test: boolean;
   }[];

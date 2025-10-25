@@ -20,6 +20,9 @@ export class TestAnswer {
   @Column()
   test_number: number;
 
+  @Column({ nullable: true })
+  test_number_string: string;
+
   @ManyToOne(() => Test, (test) => test.answers, { onDelete: "CASCADE" })
   @JoinColumn({ name: "test_id" })
   test: Test;
