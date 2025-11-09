@@ -131,7 +131,7 @@ export class TestAnswerService {
     return { message: "success" };
   }
 
-  async checkTestAnswer(test_id: string, body: CheckTestAnswerDto) {
+  async checkTestAnswer(test_id: string, body: CheckTestAnswerDto, files: any) {
     const user = await this.userRepository.findOne({
       where: { token: body.token },
     });
@@ -190,9 +190,8 @@ export class TestAnswerService {
       }
     }
 
-
     // ✅ Excel fayl
-    const uploadsDir = path.join(process.cwd(), "uploads");
+    const uploadsDir = path.join(process.cwd(), "uploads", `${test_id}`);
     if (!fs.existsSync(uploadsDir))
       fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -231,6 +230,37 @@ export class TestAnswerService {
     newRow.commit();
 
     await workbook.xlsx.writeFile(filePath);
+
+    //=========================Photolarni yuklash==================================//
+
+    if (files && files.length > 0) {
+      const userFolderName = `${body.testData.firstName}_${body.testData.lastName}`;
+      const baseDir = path.join(
+        process.cwd(),
+        "uploads",
+        `${test_id}`,
+        userFolderName
+      );
+
+      // Asosiy foydalanuvchi papkasini yaratish
+      if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
+
+      // Har bir rasm faylini joylashtirish
+      for (const file of files) {
+        // Masalan, fayl nomi "photo_589_0.jpg" bo‘lishi mumkin
+        const match = file.fieldname.match(/photo_(\d+)/);
+        const questionId = match ? match[1] : "unknown";
+
+        const questionDir = path.join(baseDir, `question_${questionId}`);
+        if (!fs.existsSync(questionDir))
+          fs.mkdirSync(questionDir, { recursive: true });
+
+        const fileName = Date.now() + "-" + file.originalname;
+        const filePath = path.join(questionDir, fileName);
+
+        fs.writeFileSync(filePath, file.buffer);
+      }
+    }
 
     const test = await this.testRepository.findOne({
       where: { test_id: body.test[0].test_id },

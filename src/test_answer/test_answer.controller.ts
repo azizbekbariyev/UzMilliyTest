@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, UploadedFiles, UseInterceptors } from "@nestjs/common";
 import { TestAnswerService } from "./test_answer.service";
 import { CheckTestAnswerDto } from "./dto/check-test-answer.dto";
 import { Req } from "@nestjs/common";
 import { Request } from "express";
 import { AddTestAnswer } from "src/types/context.type";
+import { AnyFilesInterceptor } from "@nestjs/platform-express";
 
 @Controller("test-answer")
 export class TestAnswerController {
@@ -23,11 +24,13 @@ export class TestAnswerController {
   }
 
   @Post("check-test-answer/:test_id")
+  @UseInterceptors(AnyFilesInterceptor())
   checkTestAnswer(
     @Param("test_id") test_id: string,
-    @Body() body: CheckTestAnswerDto
+    @Body() body: CheckTestAnswerDto,
+    @UploadedFiles() files: Array<Express.Multer.File>
   ) {
-    return this.testAnswerService.checkTestAnswer(test_id, body);
+    return this.testAnswerService.checkTestAnswer(test_id, body, files);
   }
 
   @Get("test-check-one-submit")

@@ -9,6 +9,8 @@ import { InjectBot } from "nestjs-telegraf";
 import { Telegraf } from "telegraf";
 import { BOT_NAME } from "src/app.constants";
 import { UserTestCheck } from "../models/userTestCheck";
+import * as fs from "fs";
+import AdmZip from "adm-zip";
 
 @Injectable()
 export class TestService {
@@ -44,31 +46,55 @@ export class TestService {
   async endTest(ctx: Context) {
     const testId = ctx.callbackQuery!["data"].split("_")[2];
     const test = await this.testRepository.findOne({
-      where: {
-        test_id: testId,
-      },
+      where: { test_id: testId },
     });
+
     if (test) {
       await this.testRepository.update(
-        {
-          test_id: testId,
-        },
-        {
-          is_it_over: true,
-        }
+        { test_id: testId },
+        { is_it_over: true }
       );
     }
-    const filePath = join(process.cwd(), "uploads", `${testId}.xlsx`);
+
+    const testDir = join(process.cwd(), "uploads", testId);
+    const excelPath = join(testDir, `${testId}.xlsx`);
+
+    if (!fs.existsSync(testDir)) {
+      return ctx.reply("❌ Test papkasi topilmadi.");
+    }
+
+    const zipPath = join(process.cwd(), "uploads", `${testId}.zip`);
+    const zip = new AdmZip();
+
+    // butun papkani qo‘shamiz (ichida rasm, excel hamma narsa bo‘ladi)
+    zip.addLocalFolder(testDir);
+
+    // zip faylni yozamiz
+    zip.writeZip(zipPath);
+
+    // Telegramga zipni yuboramiz
     await ctx.replyWithDocument({
-      source: filePath,
-      filename: `${testId}.xlsx`,
+      source: zipPath,
+      filename: `${testId}.zip`,
     });
+
+    setTimeout(
+      () => {
+        try {
+          fs.rmSync(testDir, { recursive: true, force: true });
+          fs.unlinkSync(zipPath);
+        } catch {}
+      },
+      1000 * 60 * 60 * 24 * 2
+    );
   }
 
   async sendTestUser(chatId: number, message: string) {
     const channelUrl = "https://t.me/shamseducation";
     const fullMessage = `${message}\n\n👉 <a href="${channelUrl}">Kanalga o'tish</a>`;
-    await this.bot.telegram.sendMessage(chatId, fullMessage, { parse_mode: "HTML" });
+    await this.bot.telegram.sendMessage(chatId, fullMessage, {
+      parse_mode: "HTML",
+    });
   }
 
   async viewTest(ctx: MyContext) {
