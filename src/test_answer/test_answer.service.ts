@@ -241,24 +241,42 @@ export class TestAnswerService {
         `${test_id}`,
         userFolderName
       );
-
+    
       // Asosiy foydalanuvchi papkasini yaratish
       if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
-
-      // Har bir rasm faylini joylashtirish
+    
+      // Savol ID lar bo'yicha guruhlash
+      const filesByQuestion: { [questionId: string]: Express.Multer.File[] } = {};
+    
+      // Fayllarni savol ID bo'yicha guruhlash
       for (const file of files) {
-        // Masalan, fayl nomi "photo_589_0.jpg" bo‘lishi mumkin
-        const match = file.fieldname.match(/photo_(\d+)/);
-        const questionId = match ? match[1] : "unknown";
-
+        const match = file.fieldname.match(/photo_(\d+)_(\d+)/);
+        if (match) {
+          const questionId = match[1]; // 589, 590, etc
+          const photoIndex = match[2]; // 0, 1, 2, etc
+          
+          if (!filesByQuestion[questionId]) {
+            filesByQuestion[questionId] = [];
+          }
+          filesByQuestion[questionId].push(file);
+        }
+      }
+    
+      // Har bir savol uchun papka yaratish va fayllarni saqlash
+      for (const [questionId, questionFiles] of Object.entries(filesByQuestion)) {
         const questionDir = path.join(baseDir, `question_${questionId}`);
-        if (!fs.existsSync(questionDir))
+        if (!fs.existsSync(questionDir)) {
           fs.mkdirSync(questionDir, { recursive: true });
-
-        const fileName = Date.now() + "-" + file.originalname;
-        const filePath = path.join(questionDir, fileName);
-
-        fs.writeFileSync(filePath, file.buffer);
+        }
+      
+        // Fayllarni ketma-ket saqlash
+        questionFiles.forEach((file, index) => {
+          const fileName = `photo_${questionId}_${index}.jpg`; // photo_589_0.jpg, photo_589_1.jpg
+          const filePath = path.join(questionDir, fileName);
+          fs.writeFileSync(filePath, file.buffer);
+        });
+      
+        console.log(`✅ Savol ${questionId}: ${questionFiles.length} ta rasm saqlandi`);
       }
     }
 
