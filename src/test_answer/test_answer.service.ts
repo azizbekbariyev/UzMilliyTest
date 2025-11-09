@@ -146,6 +146,8 @@ export class TestAnswerService {
     const results: Record<string, number> = {};
 
     // ✅ Javoblarni solishtirish
+    console.log("TestAnswer", testAnswers)
+    console.log("UserAnswer", body.answers)
     for (const userAns of body.answers) {
       let correct;
 
@@ -168,6 +170,8 @@ export class TestAnswerService {
             t.test_number_string == String(userAns.test_number) &&
             t.if_test == false
         );
+
+        console.log("correct", correct);
 
         if (correct) {
           const normalize = (s: string) => s.trim().toLowerCase();
@@ -254,7 +258,7 @@ export class TestAnswerService {
         if (match) {
           const questionId = match[1]; // 589, 590, etc
           const photoIndex = match[2]; // 0, 1, 2, etc
-          
+
           if (!filesByQuestion[questionId]) {
             filesByQuestion[questionId] = [];
           }

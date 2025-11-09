@@ -10,7 +10,7 @@ import { Telegraf } from "telegraf";
 import { BOT_NAME } from "src/app.constants";
 import { UserTestCheck } from "../models/userTestCheck";
 import * as fs from "fs";
-import AdmZip from "adm-zip";
+const AdmZip = require('adm-zip');
 
 @Injectable()
 export class TestService {
@@ -59,16 +59,16 @@ export class TestService {
     }
 
     const testDir = join(process.cwd(), "uploads", testId);
-    const excelPath = join(testDir, `${testId}.xlsx`);
 
     if (!fs.existsSync(testDir)) {
       return ctx.reply("❌ Test papkasi topilmadi.");
     }
 
     const zipPath = join(process.cwd(), "uploads", `${testId}.zip`);
+    
     const zip = new AdmZip();
 
-    // butun papkani qo‘shamiz (ichida rasm, excel hamma narsa bo‘ladi)
+    // butun papkani qo'shamiz
     zip.addLocalFolder(testDir);
 
     // zip faylni yozamiz
