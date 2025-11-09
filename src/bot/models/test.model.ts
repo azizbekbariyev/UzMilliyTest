@@ -23,6 +23,9 @@ export class Test {
   @Column()
   open_test_sequential: boolean;
 
+  @Column()
+  photo: number;
+
   @OneToMany(() => TestAnswer, (answer) => answer.test)
   answers: TestAnswer[];
 

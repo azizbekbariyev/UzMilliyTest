@@ -25,6 +25,7 @@ export interface AddTestAnswer {
   yopiq_testlar: Record<string, TestVariant>;
   ochiq_testlar: Record<string, string>;
   open_test_sequential?: boolean;
+  photo: number
 }
 
 export interface TestVariant {

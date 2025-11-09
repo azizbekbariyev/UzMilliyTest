@@ -47,7 +47,7 @@ export class TestAnswerService {
   }
 
   async addTestAnswer(test_id: string, answersArray: AddTestAnswer) {
-    const uploadsDir = join(process.cwd(), "uploads");
+    const uploadsDir = join(process.cwd(), "uploads", `${test_id}`);
     if (!fs.existsSync(uploadsDir))
       fs.mkdirSync(uploadsDir, { recursive: true });
 
@@ -87,6 +87,7 @@ export class TestAnswerService {
       is_it_over: false,
       science: { id: answersArray.subject.id },
       open_test_sequential: answersArray.open_test_sequential,
+      photo: answersArray.photo,
     });
     await this.testRepository.save(test);
 
