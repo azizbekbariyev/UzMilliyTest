@@ -165,11 +165,14 @@ export class TestAnswerService {
       } else {
         // ✅ Ochiq test - string bilan solishtirish
         // test_number_string: "3-a", "3-b" yoki "3"
+        const normalize = (s: string) => s.trim().toLowerCase();
         correct = testAnswers.find(
           (t) =>
-            t.test_number_string == String(userAns.test_number) &&
-            t.if_test == false
+            normalize(t.test_number_string) === normalize(String(userAns.test_number)) &&
+            t.if_test === false
         );
+
+
 
         console.log("correct", correct);
 
