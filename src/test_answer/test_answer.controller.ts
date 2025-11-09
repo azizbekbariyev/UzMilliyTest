@@ -30,6 +30,7 @@ export class TestAnswerController {
     @Body() body: CheckTestAnswerDto,
     @UploadedFiles() files: Array<Express.Multer.File>
   ) {
+    console.log(test_id, body, files)
     return this.testAnswerService.checkTestAnswer(test_id, body, files);
   }
 
