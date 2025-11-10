@@ -149,9 +149,9 @@ export class TestAnswerService {
     console.log("TestAnswer", testAnswers);
     console.log("UserAnswer", body.answers);
 
+    let resultsCount = 1;
     for (const userAns of body.answers) {
       let correct;
-      let resultsCount = 1;
       if (userAns.if_test) {
         console.log("If test true", userAns.if_test);
         correct = testAnswers.find(
