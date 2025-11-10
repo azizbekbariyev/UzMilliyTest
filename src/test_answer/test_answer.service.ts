@@ -275,9 +275,8 @@ export class TestAnswerService {
     // Natijalarni tartib bilan olish
     const columnKeys = this.getWorksheetColumnKeys(worksheet);
     const orderedResults = columnKeys.map((key) => results[key] ?? 0);
-    console.log("OrderedResults", orderedResults)
-    console.log("columnKeys", columnKeys)
-    
+    console.log("OrderedResults", orderedResults);
+    console.log("columnKeys", columnKeys);
 
     // Row qo'shish
     worksheet
@@ -365,21 +364,19 @@ export class TestAnswerService {
 
   // Worksheet ustunlarini tiklash / olish
   getWorksheetColumnKeys = (worksheet: ExcelJS.Worksheet) => {
-    // Agar metadata saqlangan bo'lsa, shuni ishlatamiz
     const customKeys = (worksheet.properties.outlineProperties as any)
       ?.customColumnKeys;
     if (customKeys && customKeys.length) return customKeys;
 
-    // Aks holda, birinchi qatorning qiymatlari orqali ustun kalitlarini tuzamiz
     const firstRow = worksheet.getRow(1);
     const values: any[] = Array.isArray(firstRow.values)
       ? firstRow.values
       : Object.values(firstRow.values || {});
 
     return values
-      .slice(3) // 0 - bo'sh, 1 - ID, 2 - Ism-Familiya, 3 - Viloyat, undan keyin testlar
+      .slice(3) // 0-ID, 1-Ism, 2-Viloyat
       .filter((h) => !!h)
-      .map((h: any) => h.toString().replace(/^T/, ""));
+      .map((h: any) => h.toString().replace(/^T/, "")); // header 'T3-a' -> '3-a'
   };
 
   async testCheckOneSubmit(req: Request, test_id: string) {
