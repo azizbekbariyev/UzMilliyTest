@@ -137,7 +137,8 @@ export class TestAnswerService {
     });
     if (!user) throw new Error("User not found");
 
-    const testAnswers = await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
+    const testAnswers =
+      await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
 
     // ✅ Test formatini aniqlash
     const isSequential = body.test?.[0]?.open_test_sequential === true;
@@ -165,7 +166,8 @@ export class TestAnswerService {
       } else {
         console.log("If test false", userAns.if_test);
         correct = testAnswers.find(
-          (t) => t.test_number_string == userAns.test_number && t.if_test === false
+          (t) =>
+            t.test_number_string == userAns.test_number && t.if_test === false
         );
 
         console.log("correct2", correct);
@@ -187,7 +189,7 @@ export class TestAnswerService {
         }
       }
     }
-    console.log("Results:", results);
+    console.log(results);
 
     // ✅ Excel fayl
     const uploadsDir = path.join(process.cwd(), "uploads", `${test_id}`);
@@ -197,36 +199,35 @@ export class TestAnswerService {
     const filePath = path.join(uploadsDir, `${body.test[0].test_id}.xlsx`);
     const workbook = new ExcelJS.Workbook();
     let worksheet: ExcelJS.Worksheet;
-    let columnKeys: string[] = [];
 
     try {
       if (fs.existsSync(filePath)) {
         await workbook.xlsx.readFile(filePath);
         worksheet = workbook.getWorksheet("Natijalar") as ExcelJS.Worksheet;
-        if (!worksheet) throw new Error("Worksheet topilmadi");
+        if (!worksheet) throw new Error();
 
-        // ✅ Metadata dan kalitlarni olish
-        const metadata = (worksheet.properties.outlineProperties as any)?.customColumnKeys;
-        
-        if (metadata && Array.isArray(metadata) && metadata.length > 0) {
-          columnKeys = metadata;
-          console.log("✅ Metadata dan olingan kalitlar:", columnKeys);
-        } else {
-          // ✅ Fallback: Ustunlardan olish
-          columnKeys = worksheet.columns
-            .slice(3) // ID, Ism-Familiya, Viloyat dan keyin
-            .map((col) => col.key)
-            .filter((key) => key !== undefined && key !== null)
-            .map((key) => String(key).replace(/^t/, ""));
-          
-          console.log("⚠️ Ustunlardan olingan kalitlar:", columnKeys);
+        // 🧩 Ustunlarni o'qish (agar kerak bo'lsa, qayta tiklash)
+        if (!worksheet.columns || worksheet.columns.length === 0) {
+          const firstRow = worksheet.getRow(1);
+          const values = Array.isArray(firstRow.values)
+            ? firstRow.values
+            : Object.values(firstRow.values || {}); // fallback
+
+          const headers = values
+            .slice(1)
+            .filter((h) => !!h)
+            .map((h: any) => ({
+              header: h,
+              key: h.toString().startsWith("T")
+                ? `t${h.substring(1)}`
+                : h.toString().toLowerCase(),
+              width: 10,
+            }));
+
+          worksheet.columns = headers;
         }
-      } else {
-        throw new Error("Fayl topilmadi");
-      }
-    } catch (error) {
-      console.log("📝 Yangi worksheet yaratilmoqda...");
-      
+      } else throw new Error();
+    } catch {
       worksheet = workbook.addWorksheet("Natijalar");
       const baseColumns = [
         { header: "ID", key: "id", width: 10 },
@@ -234,7 +235,7 @@ export class TestAnswerService {
         { header: "Viloyat", key: "region", width: 20 },
       ];
 
-      // ✅ Noyob test kalitlarini olish
+      // ✅ TUZATILDI: Noyob test raqamlarini olish
       const uniqueTestKeys = new Set<string>();
 
       for (const ta of testAnswers) {
@@ -243,14 +244,12 @@ export class TestAnswerService {
           uniqueTestKeys.add(String(ta.test_number));
         } else {
           // Ochiq test - test_number_string ishlatamiz
-          if (ta.test_number_string) {
-            uniqueTestKeys.add(ta.test_number_string);
-          }
+          uniqueTestKeys.add(ta.test_number_string);
         }
       }
 
-      // ✅ Kalitlarni tartiblash (natural sort)
-      columnKeys = Array.from(uniqueTestKeys).sort((a, b) => {
+      // Kalitlarni tartiblash (3-a, 3-b, 4 => natural sort)
+      const sortedKeys = Array.from(uniqueTestKeys).sort((a, b) => {
         const parseKey = (key: string) => {
           const match = key.match(/^(\d+)([a-z]?)$/i);
           if (!match) return { num: 0, letter: "" };
@@ -267,10 +266,8 @@ export class TestAnswerService {
         return aP.letter.localeCompare(bP.letter);
       });
 
-      console.log("✅ Yaratilgan kalitlar:", columnKeys);
-
-      // ✅ Ustunlarni qo'shish
-      for (const key of columnKeys) {
+      // Ustunlarni qo'shish
+      for (const key of sortedKeys) {
         baseColumns.push({
           header: `T${key}`,
           key: `t${key}`,
@@ -280,26 +277,28 @@ export class TestAnswerService {
 
       worksheet.columns = baseColumns;
 
-      // ✅ Metadata ga saqlash
+      // ✅ Worksheet metadata ga kalitlarni saqlash
       worksheet.properties.outlineProperties = {
-        customColumnKeys: columnKeys,
+        customColumnKeys: sortedKeys,
       } as any;
     }
 
-    // ✅ Tartib bilan natijalarni olish
+    // ✅ TUZATILDI: Tartib bilan natijalarni olish
     const orderedResults: any[] = [];
 
-    console.log("📊 columnKeys:", columnKeys);
-    console.log("📊 results:", results);
+    // Worksheet dan saqlangan kalitlarni olish
+    const columnKeys =
+      (worksheet.properties.outlineProperties as any)?.customColumnKeys ||
+      worksheet.columns.slice(3).map((col) => col.key?.replace("t", ""));
+
+    console.log("columnKeys", columnKeys);
 
     for (const key of columnKeys) {
-      const result = results[key];
-      orderedResults.push(result !== undefined ? result : 0);
+      orderedResults.push(results[key] ?? 0); // agar javob yo'q bo'lsa 0
     }
 
-    console.log("📊 OrderedResults:", orderedResults);
+    console.log("OrderedResults", orderedResults);
 
-    // ✅ Yangi qator qo'shish
     const newRow = worksheet.addRow([
       body.test[0].test_id,
       `${body.testData.firstName} ${body.testData.lastName}`,
@@ -309,7 +308,6 @@ export class TestAnswerService {
     newRow.commit();
 
     await workbook.xlsx.writeFile(filePath);
-    console.log("✅ Excel faylga saqlandi");
 
     //=========================Photolarni yuklash==================================//
 
@@ -326,7 +324,8 @@ export class TestAnswerService {
       if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
 
       // Savol ID lar bo'yicha guruhlash
-      const filesByQuestion: { [questionId: string]: Express.Multer.File[] } = {};
+      const filesByQuestion: { [questionId: string]: Express.Multer.File[] } =
+        {};
 
       // Fayllarni savol ID bo'yicha guruhlash
       for (const file of files) {
@@ -343,7 +342,9 @@ export class TestAnswerService {
       }
 
       // Har bir savol uchun papka yaratish va fayllarni saqlash
-      for (const [questionId, questionFiles] of Object.entries(filesByQuestion)) {
+      for (const [questionId, questionFiles] of Object.entries(
+        filesByQuestion
+      )) {
         const questionDir = path.join(baseDir, `question_${questionId}`);
         if (!fs.existsSync(questionDir)) {
           fs.mkdirSync(questionDir, { recursive: true });
@@ -356,7 +357,9 @@ export class TestAnswerService {
           fs.writeFileSync(filePath, file.buffer);
         });
 
-        console.log(`✅ Savol ${questionId}: ${questionFiles.length} ta rasm saqlandi`);
+        console.log(
+          `✅ Savol ${questionId}: ${questionFiles.length} ta rasm saqlandi`
+        );
       }
     }
 
