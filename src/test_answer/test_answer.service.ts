@@ -271,9 +271,13 @@ export class TestAnswerService {
       (worksheet.properties.outlineProperties as any)?.customColumnKeys ||
       worksheet.columns.slice(3).map((col) => col.key?.replace("t", ""));
 
+      console.log("columnKeys", columnKeys)
+
     for (const key of columnKeys) {
       orderedResults.push(results[key] ?? 0); // agar javob yo'q bo'lsa 0
     }
+
+    console.log("OrderedResults", orderedResults)
 
     const newRow = worksheet.addRow([
       body.test[0].test_id,
