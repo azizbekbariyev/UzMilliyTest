@@ -151,7 +151,6 @@ export class TestAnswerService {
 
     for (const userAns of body.answers) {
       let correct;
-      console.log("Correct", correct)
       if (userAns.if_test) {
         console.log("If test true", userAns.if_test)
         correct = testAnswers.find(
@@ -191,6 +190,7 @@ export class TestAnswerService {
         }
       }
     }
+    console.log(results)
 
     // ✅ Excel fayl
     const uploadsDir = path.join(process.cwd(), "uploads", `${test_id}`);
