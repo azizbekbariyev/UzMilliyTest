@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, Query, UploadedFiles, UseInterceptors } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UploadedFiles,
+  UseInterceptors,
+} from "@nestjs/common";
 import { TestAnswerService } from "./test_answer.service";
 import { CheckTestAnswerDto } from "./dto/check-test-answer.dto";
 import { Req } from "@nestjs/common";
@@ -27,11 +36,23 @@ export class TestAnswerController {
   @UseInterceptors(AnyFilesInterceptor())
   checkTestAnswer(
     @Param("test_id") test_id: string,
-    @Body() body: CheckTestAnswerDto,
+    @Body() body: any,
     @UploadedFiles() files: Array<Express.Multer.File>
   ) {
-    console.log(test_id, body, files)
-    return this.testAnswerService.checkTestAnswer(test_id, body, files);
+    try {
+      const parsedBody = {
+        ...body,
+        answers: JSON.parse(body.answers),
+        testData: JSON.parse(body.testData),
+        test: JSON.parse(body.test),
+      };
+
+      console.log(test_id, parsedBody, files);
+      return this.testAnswerService.checkTestAnswer(test_id, parsedBody, files);
+    } catch (err) {
+      console.error("JSON parse error:", err);
+      throw new Error("Invalid JSON format in form-data fields");
+    }
   }
 
   @Get("test-check-one-submit")
