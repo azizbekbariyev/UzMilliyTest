@@ -140,14 +140,15 @@ export class TestAnswerService {
     const testAnswers =
       await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
 
-    // Test formatini aniqlash
+    // ✅ Test formatini aniqlash
     const isSequential = body.test?.[0]?.open_test_sequential === true;
 
     const results: Record<string, number> = {};
 
     // ✅ Javoblarni solishtirish
-    console.log("TestAnswer", testAnswers)
-    console.log("UserAnswer", body.answers)
+    console.log("TestAnswer", testAnswers);
+    console.log("UserAnswer", body.answers);
+
     for (const userAns of body.answers) {
       let correct;
 
@@ -164,20 +165,16 @@ export class TestAnswerService {
         }
       } else {
         // ✅ Ochiq test - string bilan solishtirish
-        // test_number_string: "3-a", "3-b" yoki "3"
         const normalize = (s: string) => s.trim().toLowerCase();
         correct = testAnswers.find(
           (t) =>
-            normalize(t.test_number_string) === normalize(String(userAns.test_number)) &&
-            t.if_test === false
+            normalize(t.test_number_string) ===
+              normalize(String(userAns.test_number)) && t.if_test === false
         );
-
-
 
         console.log("correct", correct);
 
         if (correct) {
-          const normalize = (s: string) => s.trim().toLowerCase();
           const key = String(userAns.test_number);
           results[key] =
             normalize(userAns.answer) === normalize(correct.option) ? 1 : 0;
@@ -220,19 +217,71 @@ export class TestAnswerService {
         { header: "Viloyat", key: "region", width: 20 },
       ];
 
-      // Barcha testlar sonini hisoblash
-      const totalTests = testAnswers.length;
-      for (let i = 1; i <= totalTests; i++) {
-        baseColumns.push({ header: `T${i}`, key: `t${i}`, width: 10 });
+      // ✅ TUZATILDI: Noyob test raqamlarini olish
+      const uniqueTestKeys = new Set<string>();
+
+      for (const ta of testAnswers) {
+        if (ta.if_test) {
+          // Yopiq test - raqam ishlatamiz
+          uniqueTestKeys.add(String(ta.test_number));
+        } else {
+          // Ochiq test - test_number_string ishlatamiz
+          uniqueTestKeys.add(ta.test_number_string);
+        }
       }
+
+      // Kalitlarni tartiblash (3-a, 3-b, 4 => natural sort)
+      const sortedKeys = Array.from(uniqueTestKeys).sort((a, b) => {
+        const parseKey = (key: string) => {
+          const match = key.match(/^(\d+)([a-z]?)$/i);
+          if (!match) return { num: 0, letter: "" };
+          return {
+            num: parseInt(match[1]),
+            letter: match[2] || "",
+          };
+        };
+
+        const aP = parseKey(a);
+        const bP = parseKey(b);
+
+        if (aP.num !== bP.num) return aP.num - bP.num;
+        return aP.letter.localeCompare(bP.letter);
+      });
+
+      // Ustunlarni qo'shish
+      for (const key of sortedKeys) {
+        baseColumns.push({
+          header: `T${key}`,
+          key: `t${key}`,
+          width: 10,
+        });
+      }
+
       worksheet.columns = baseColumns;
+
+      // ✅ Worksheet metadata ga kalitlarni saqlash
+      worksheet.properties.outlineProperties = {
+        customColumnKeys: sortedKeys,
+      } as any;
+    }
+
+    // ✅ TUZATILDI: Tartib bilan natijalarni olish
+    const orderedResults: any[] = [];
+
+    // Worksheet dan saqlangan kalitlarni olish
+    const columnKeys =
+      (worksheet.properties.outlineProperties as any)?.customColumnKeys ||
+      worksheet.columns.slice(3).map((col) => col.key?.replace("t", ""));
+
+    for (const key of columnKeys) {
+      orderedResults.push(results[key] ?? 0); // agar javob yo'q bo'lsa 0
     }
 
     const newRow = worksheet.addRow([
       body.test[0].test_id,
       `${body.testData.firstName} ${body.testData.lastName}`,
       body.testData.region,
-      ...Object.values(results),
+      ...orderedResults,
     ]);
     newRow.commit();
 
@@ -248,13 +297,14 @@ export class TestAnswerService {
         `${test_id}`,
         userFolderName
       );
-    
+
       // Asosiy foydalanuvchi papkasini yaratish
       if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
-    
+
       // Savol ID lar bo'yicha guruhlash
-      const filesByQuestion: { [questionId: string]: Express.Multer.File[] } = {};
-    
+      const filesByQuestion: { [questionId: string]: Express.Multer.File[] } =
+        {};
+
       // Fayllarni savol ID bo'yicha guruhlash
       for (const file of files) {
         const match = file.fieldname.match(/photo_(\d+)_(\d+)/);
@@ -268,22 +318,26 @@ export class TestAnswerService {
           filesByQuestion[questionId].push(file);
         }
       }
-    
+
       // Har bir savol uchun papka yaratish va fayllarni saqlash
-      for (const [questionId, questionFiles] of Object.entries(filesByQuestion)) {
+      for (const [questionId, questionFiles] of Object.entries(
+        filesByQuestion
+      )) {
         const questionDir = path.join(baseDir, `question_${questionId}`);
         if (!fs.existsSync(questionDir)) {
           fs.mkdirSync(questionDir, { recursive: true });
         }
-      
+
         // Fayllarni ketma-ket saqlash
         questionFiles.forEach((file, index) => {
-          const fileName = `photo_${questionId}_${index}.jpg`; // photo_589_0.jpg, photo_589_1.jpg
+          const fileName = `photo_${questionId}_${index}.jpg`;
           const filePath = path.join(questionDir, fileName);
           fs.writeFileSync(filePath, file.buffer);
         });
-      
-        console.log(`✅ Savol ${questionId}: ${questionFiles.length} ta rasm saqlandi`);
+
+        console.log(
+          `✅ Savol ${questionId}: ${questionFiles.length} ta rasm saqlandi`
+        );
       }
     }
 
