@@ -376,7 +376,7 @@ export class TestAnswerService {
       : Object.values(firstRow.values || {});
 
     return values
-      .slice(3) // 0-ID, 1-Ism, 2-Viloyat
+      .slice(4) // 0-ID, 1-Ism, 2-Viloyat
       .filter((h) => !!h)
       .map((h: any) => h.toString().replace(/^T/, "")); // header 'T3-a' -> '3-a'
   };
