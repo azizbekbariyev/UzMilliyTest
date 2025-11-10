@@ -44,49 +44,70 @@ export class TestService {
   }
 
   async endTest(ctx: Context) {
-    const testId = ctx.callbackQuery!["data"].split("_")[2];
-    const test = await this.testRepository.findOne({
-      where: { test_id: testId },
-    });
+    try {
+      const testId = ctx.callbackQuery!["data"].split("_")[2];
+      const test = await this.testRepository.findOne({
+        where: { test_id: testId },
+      });
 
-    if (test) {
+      if (!test) {
+        return ctx.reply("❌ Bunday test topilmadi.");
+      }
+
+      // Testni yakunlangan deb belgilaymiz
       await this.testRepository.update(
         { test_id: testId },
         { is_it_over: true }
       );
-    }
 
-    const testDir = join(process.cwd(), "uploads", testId);
+      const testDir = join(process.cwd(), "uploads", testId);
+      if (!fs.existsSync(testDir)) {
+        return ctx.reply("❌ Test papkasi topilmadi.");
+      }
 
-    if (!fs.existsSync(testDir)) {
-      return ctx.reply("❌ Test papkasi topilmadi.");
-    }
+      const zipPath = join(process.cwd(), "uploads", `${testId}.zip`);
 
-    const zipPath = join(process.cwd(), "uploads", `${testId}.zip`);
-    
-    const zip = new AdmZip();
+      // Zip fayl yaratamiz
+      const zip = new AdmZip();
+      zip.addLocalFolder(testDir);
+      zip.writeZip(zipPath);
 
-    // butun papkani qo'shamiz
-    zip.addLocalFolder(testDir);
+      // Fayl hajmini tekshiramiz
+      const stats = fs.statSync(zipPath);
+      const fileSizeMB = stats.size / (1024 * 1024);
 
-    // zip faylni yozamiz
-    zip.writeZip(zipPath);
+      if (fileSizeMB > 48) {
+        // Juda katta bo‘lsa — link yuborish
+        const publicUrl = `https://bot.shamseducation.uz/uploads/${testId}.zip`;
+        await ctx.reply(
+          `⚠️ Zip fayl hajmi ${fileSizeMB.toFixed(
+            2
+          )} MB bo‘lgani uchun u to‘g‘ridan-to‘g‘ri Telegram orqali yuborilmadi.\n\n🔗 Yuklab olish: ${publicUrl}`
+        );
+      } else {
+        // 50 MB dan kichik bo‘lsa — Telegram orqali yuborish
+        await ctx.replyWithDocument({
+          source: zipPath,
+          filename: `${testId}.zip`,
+        });
+      }
 
-    // Telegramga zipni yuboramiz
-    await ctx.replyWithDocument({
-      source: zipPath,
-      filename: `${testId}.zip`,
-    });
-
-    setTimeout(
-      () => {
+      // Tozalash (2 kundan keyin)
+      setTimeout(() => {
         try {
           fs.rmSync(testDir, { recursive: true, force: true });
           fs.unlinkSync(zipPath);
-        } catch {}
-      },
-      1000 * 60 * 60 * 24 * 2
-    );
+          console.log(`🧹 ${testId} fayllari o‘chirildi`);
+        } catch (err) {
+          console.error("Faylni o‘chirishda xatolik:", err);
+        }
+      }, 1000 * 60 * 60 * 24 * 2); // 2 kun
+
+      return ctx.reply("✅ Test yakunlandi!");
+    } catch (err) {
+      console.error("❌ endTest xatolik:", err);
+      return ctx.reply("❌ Testni yakunlashda xatolik yuz berdi.");
+    }
   }
 
   async sendTestUser(chatId: number, message: string) {
