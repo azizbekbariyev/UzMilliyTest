@@ -137,8 +137,7 @@ export class TestAnswerService {
     });
     if (!user) throw new Error("User not found");
 
-    const testAnswers =
-      await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
+    const testAnswers = await this.testAnswerRepo.getTestAnswerWithTestId(test_id);
 
     // ✅ Test formatini aniqlash
     const isSequential = body.test?.[0]?.open_test_sequential === true;
@@ -152,10 +151,9 @@ export class TestAnswerService {
     for (const userAns of body.answers) {
       let correct;
       if (userAns.if_test) {
-        console.log("If test true", userAns.if_test)
+        console.log("If test true", userAns.if_test);
         correct = testAnswers.find(
-          (t) =>
-            t.test_number == userAns.test_number && t.if_test == true
+          (t) => t.test_number == userAns.test_number && t.if_test == true
         );
 
         console.log("correct1", correct);
@@ -165,7 +163,7 @@ export class TestAnswerService {
           results[key] = userAns.answer === correct.option ? 1 : 0;
         }
       } else {
-        console.log("If test false", userAns.if_test)
+        console.log("If test false", userAns.if_test);
         correct = testAnswers.find(
           (t) => t.test_number_string == userAns.test_number && t.if_test === false
         );
@@ -174,8 +172,7 @@ export class TestAnswerService {
 
         if (correct) {
           const key = String(userAns.test_number);
-          results[key] =
-            userAns.answer == correct.option ? 1 : 0;
+          results[key] = userAns.answer == correct.option ? 1 : 0;
         } else {
           console.log("Ochiq test topilmadi:", {
             userTestNumber: userAns.test_number,
@@ -190,7 +187,7 @@ export class TestAnswerService {
         }
       }
     }
-    console.log(results)
+    console.log("Results:", results);
 
     // ✅ Excel fayl
     const uploadsDir = path.join(process.cwd(), "uploads", `${test_id}`);
@@ -200,86 +197,109 @@ export class TestAnswerService {
     const filePath = path.join(uploadsDir, `${body.test[0].test_id}.xlsx`);
     const workbook = new ExcelJS.Workbook();
     let worksheet: ExcelJS.Worksheet;
+    let columnKeys: string[] = [];
 
     try {
       if (fs.existsSync(filePath)) {
         await workbook.xlsx.readFile(filePath);
         worksheet = workbook.getWorksheet("Natijalar") as ExcelJS.Worksheet;
-        if (!worksheet) throw new Error();
-      } else throw new Error();
-    } catch {
-      throw new Error("Excel fayl topilmadi");
-      // worksheet = workbook.addWorksheet("Natijalar");
-      // const baseColumns = [
-      //   { header: "ID", key: "id", width: 10 },
-      //   { header: "Ism-Familiya", key: "name", width: 20 },
-      //   { header: "Viloyat", key: "region", width: 20 },
-      // ];
+        if (!worksheet) throw new Error("Worksheet topilmadi");
 
-      // // ✅ TUZATILDI: Noyob test raqamlarini olish
-      // const uniqueTestKeys = new Set<string>();
+        // ✅ Metadata dan kalitlarni olish
+        const metadata = (worksheet.properties.outlineProperties as any)?.customColumnKeys;
+        
+        if (metadata && Array.isArray(metadata) && metadata.length > 0) {
+          columnKeys = metadata;
+          console.log("✅ Metadata dan olingan kalitlar:", columnKeys);
+        } else {
+          // ✅ Fallback: Ustunlardan olish
+          columnKeys = worksheet.columns
+            .slice(3) // ID, Ism-Familiya, Viloyat dan keyin
+            .map((col) => col.key)
+            .filter((key) => key !== undefined && key !== null)
+            .map((key) => String(key).replace(/^t/, ""));
+          
+          console.log("⚠️ Ustunlardan olingan kalitlar:", columnKeys);
+        }
+      } else {
+        throw new Error("Fayl topilmadi");
+      }
+    } catch (error) {
+      console.log("📝 Yangi worksheet yaratilmoqda...");
+      
+      worksheet = workbook.addWorksheet("Natijalar");
+      const baseColumns = [
+        { header: "ID", key: "id", width: 10 },
+        { header: "Ism-Familiya", key: "name", width: 20 },
+        { header: "Viloyat", key: "region", width: 20 },
+      ];
 
-      // for (const ta of testAnswers) {
-      //   if (ta.if_test) {
-      //     // Yopiq test - raqam ishlatamiz
-      //     uniqueTestKeys.add(String(ta.test_number));
-      //   } else {
-      //     // Ochiq test - test_number_string ishlatamiz
-      //     uniqueTestKeys.add(ta.test_number_string);
-      //   }
-      // }
+      // ✅ Noyob test kalitlarini olish
+      const uniqueTestKeys = new Set<string>();
 
-      // // Kalitlarni tartiblash (3-a, 3-b, 4 => natural sort)
-      // const sortedKeys = Array.from(uniqueTestKeys).sort((a, b) => {
-      //   const parseKey = (key: string) => {
-      //     const match = key.match(/^(\d+)([a-z]?)$/i);
-      //     if (!match) return { num: 0, letter: "" };
-      //     return {
-      //       num: parseInt(match[1]),
-      //       letter: match[2] || "",
-      //     };
-      //   };
+      for (const ta of testAnswers) {
+        if (ta.if_test) {
+          // Yopiq test - raqam ishlatamiz
+          uniqueTestKeys.add(String(ta.test_number));
+        } else {
+          // Ochiq test - test_number_string ishlatamiz
+          if (ta.test_number_string) {
+            uniqueTestKeys.add(ta.test_number_string);
+          }
+        }
+      }
 
-      //   const aP = parseKey(a);
-      //   const bP = parseKey(b);
+      // ✅ Kalitlarni tartiblash (natural sort)
+      columnKeys = Array.from(uniqueTestKeys).sort((a, b) => {
+        const parseKey = (key: string) => {
+          const match = key.match(/^(\d+)([a-z]?)$/i);
+          if (!match) return { num: 0, letter: "" };
+          return {
+            num: parseInt(match[1]),
+            letter: match[2] || "",
+          };
+        };
 
-      //   if (aP.num !== bP.num) return aP.num - bP.num;
-      //   return aP.letter.localeCompare(bP.letter);
-      // });
+        const aP = parseKey(a);
+        const bP = parseKey(b);
 
-      // // Ustunlarni qo'shish
-      // for (const key of sortedKeys) {
-      //   baseColumns.push({
-      //     header: `T${key}`,
-      //     key: `t${key}`,
-      //     width: 10,
-      //   });
-      // }
+        if (aP.num !== bP.num) return aP.num - bP.num;
+        return aP.letter.localeCompare(bP.letter);
+      });
 
-      // worksheet.columns = baseColumns;
+      console.log("✅ Yaratilgan kalitlar:", columnKeys);
 
-      // // ✅ Worksheet metadata ga kalitlarni saqlash
-      // worksheet.properties.outlineProperties = {
-      //   customColumnKeys: sortedKeys,
-      // } as any;
+      // ✅ Ustunlarni qo'shish
+      for (const key of columnKeys) {
+        baseColumns.push({
+          header: `T${key}`,
+          key: `t${key}`,
+          width: 10,
+        });
+      }
+
+      worksheet.columns = baseColumns;
+
+      // ✅ Metadata ga saqlash
+      worksheet.properties.outlineProperties = {
+        customColumnKeys: columnKeys,
+      } as any;
     }
 
-    // ✅ TUZATILDI: Tartib bilan natijalarni olish
+    // ✅ Tartib bilan natijalarni olish
     const orderedResults: any[] = [];
 
-    // Worksheet dan saqlangan kalitlarni olish
-    const columnKeys =
-      (worksheet.properties.outlineProperties as any)?.customColumnKeys ||
-      worksheet.columns.slice(3).map((col) => col.key?.replace("t", ""));
-
-      console.log("columnKeys", columnKeys)
+    console.log("📊 columnKeys:", columnKeys);
+    console.log("📊 results:", results);
 
     for (const key of columnKeys) {
-      orderedResults.push(results[key] ?? 0); // agar javob yo'q bo'lsa 0
+      const result = results[key];
+      orderedResults.push(result !== undefined ? result : 0);
     }
 
-    console.log("OrderedResults", orderedResults)
+    console.log("📊 OrderedResults:", orderedResults);
 
+    // ✅ Yangi qator qo'shish
     const newRow = worksheet.addRow([
       body.test[0].test_id,
       `${body.testData.firstName} ${body.testData.lastName}`,
@@ -289,6 +309,7 @@ export class TestAnswerService {
     newRow.commit();
 
     await workbook.xlsx.writeFile(filePath);
+    console.log("✅ Excel faylga saqlandi");
 
     //=========================Photolarni yuklash==================================//
 
@@ -305,8 +326,7 @@ export class TestAnswerService {
       if (!fs.existsSync(baseDir)) fs.mkdirSync(baseDir, { recursive: true });
 
       // Savol ID lar bo'yicha guruhlash
-      const filesByQuestion: { [questionId: string]: Express.Multer.File[] } =
-        {};
+      const filesByQuestion: { [questionId: string]: Express.Multer.File[] } = {};
 
       // Fayllarni savol ID bo'yicha guruhlash
       for (const file of files) {
@@ -323,9 +343,7 @@ export class TestAnswerService {
       }
 
       // Har bir savol uchun papka yaratish va fayllarni saqlash
-      for (const [questionId, questionFiles] of Object.entries(
-        filesByQuestion
-      )) {
+      for (const [questionId, questionFiles] of Object.entries(filesByQuestion)) {
         const questionDir = path.join(baseDir, `question_${questionId}`);
         if (!fs.existsSync(questionDir)) {
           fs.mkdirSync(questionDir, { recursive: true });
@@ -338,9 +356,7 @@ export class TestAnswerService {
           fs.writeFileSync(filePath, file.buffer);
         });
 
-        console.log(
-          `✅ Savol ${questionId}: ${questionFiles.length} ta rasm saqlandi`
-        );
+        console.log(`✅ Savol ${questionId}: ${questionFiles.length} ta rasm saqlandi`);
       }
     }
 
