@@ -1,5 +1,8 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Response } from 'express'; // ⬅️ shu import zarur
 import { TestService } from './test.service';
+import { join } from 'path';
+import * as fs from 'fs';
 
 @Controller('test')
 export class TestController {
@@ -8,5 +11,37 @@ export class TestController {
   @Get('test-science/:test_id')
   async findOneTestWithScience(@Param('test_id') test_id: string) {
     return this.testService.findOneTestWithScience(test_id);
+  }
+
+  // 1️⃣ — ZIP fayl mavjudligini tekshirish va URL qaytarish
+  @Get('zip/:testId')
+  async getZipFile(@Param('testId') testId: string) {
+    const zipPath = join(process.cwd(), 'uploads', `${testId}.zip`);
+
+    if (!fs.existsSync(zipPath)) {
+      return { message: '❌ ZIP fayl topilmadi' };
+    }
+
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const fileUrl = `${baseUrl}/uploads/${testId}.zip`;
+
+    return { message: '✅ ZIP fayl tayyor', url: fileUrl };
+  }
+
+  // 2️⃣ — ZIP faylni to‘g‘ridan-to‘g‘ri yuklab olish
+  @Get('download/:testId')
+  async downloadZip(@Param('testId') testId: string, @Res() res: Response) {
+    const zipPath = join(process.cwd(), 'uploads', `${testId}.zip`);
+
+    if (!fs.existsSync(zipPath)) {
+      return res.status(404).json({ message: '❌ ZIP fayl topilmadi' });
+    }
+
+    res.download(zipPath, `${testId}.zip`, (err) => {
+      if (err) {
+        console.error('📛 ZIP yuborishda xatolik:', err);
+        res.status(500).json({ message: '📛 ZIP yuborishda xatolik yuz berdi' });
+      }
+    });
   }
 }

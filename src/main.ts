@@ -2,6 +2,8 @@ import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as cookieParser from "cookie-parser";
 import { NestExpressApplication } from "@nestjs/platform-express";
+import * as express from 'express';
+import { join } from "path";
 
 async function start() {
   try {
@@ -34,6 +36,7 @@ async function start() {
       preflightContinue: false,
       optionsSuccessStatus: 204
     });
+    app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
     app.use(cookieParser());
     app.setGlobalPrefix("api");
