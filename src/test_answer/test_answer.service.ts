@@ -208,59 +208,60 @@ export class TestAnswerService {
         if (!worksheet) throw new Error();
       } else throw new Error();
     } catch {
-      worksheet = workbook.addWorksheet("Natijalar");
-      const baseColumns = [
-        { header: "ID", key: "id", width: 10 },
-        { header: "Ism-Familiya", key: "name", width: 20 },
-        { header: "Viloyat", key: "region", width: 20 },
-      ];
+      throw new Error("Excel fayl topilmadi");
+      // worksheet = workbook.addWorksheet("Natijalar");
+      // const baseColumns = [
+      //   { header: "ID", key: "id", width: 10 },
+      //   { header: "Ism-Familiya", key: "name", width: 20 },
+      //   { header: "Viloyat", key: "region", width: 20 },
+      // ];
 
-      // ✅ TUZATILDI: Noyob test raqamlarini olish
-      const uniqueTestKeys = new Set<string>();
+      // // ✅ TUZATILDI: Noyob test raqamlarini olish
+      // const uniqueTestKeys = new Set<string>();
 
-      for (const ta of testAnswers) {
-        if (ta.if_test) {
-          // Yopiq test - raqam ishlatamiz
-          uniqueTestKeys.add(String(ta.test_number));
-        } else {
-          // Ochiq test - test_number_string ishlatamiz
-          uniqueTestKeys.add(ta.test_number_string);
-        }
-      }
+      // for (const ta of testAnswers) {
+      //   if (ta.if_test) {
+      //     // Yopiq test - raqam ishlatamiz
+      //     uniqueTestKeys.add(String(ta.test_number));
+      //   } else {
+      //     // Ochiq test - test_number_string ishlatamiz
+      //     uniqueTestKeys.add(ta.test_number_string);
+      //   }
+      // }
 
-      // Kalitlarni tartiblash (3-a, 3-b, 4 => natural sort)
-      const sortedKeys = Array.from(uniqueTestKeys).sort((a, b) => {
-        const parseKey = (key: string) => {
-          const match = key.match(/^(\d+)([a-z]?)$/i);
-          if (!match) return { num: 0, letter: "" };
-          return {
-            num: parseInt(match[1]),
-            letter: match[2] || "",
-          };
-        };
+      // // Kalitlarni tartiblash (3-a, 3-b, 4 => natural sort)
+      // const sortedKeys = Array.from(uniqueTestKeys).sort((a, b) => {
+      //   const parseKey = (key: string) => {
+      //     const match = key.match(/^(\d+)([a-z]?)$/i);
+      //     if (!match) return { num: 0, letter: "" };
+      //     return {
+      //       num: parseInt(match[1]),
+      //       letter: match[2] || "",
+      //     };
+      //   };
 
-        const aP = parseKey(a);
-        const bP = parseKey(b);
+      //   const aP = parseKey(a);
+      //   const bP = parseKey(b);
 
-        if (aP.num !== bP.num) return aP.num - bP.num;
-        return aP.letter.localeCompare(bP.letter);
-      });
+      //   if (aP.num !== bP.num) return aP.num - bP.num;
+      //   return aP.letter.localeCompare(bP.letter);
+      // });
 
-      // Ustunlarni qo'shish
-      for (const key of sortedKeys) {
-        baseColumns.push({
-          header: `T${key}`,
-          key: `t${key}`,
-          width: 10,
-        });
-      }
+      // // Ustunlarni qo'shish
+      // for (const key of sortedKeys) {
+      //   baseColumns.push({
+      //     header: `T${key}`,
+      //     key: `t${key}`,
+      //     width: 10,
+      //   });
+      // }
 
-      worksheet.columns = baseColumns;
+      // worksheet.columns = baseColumns;
 
-      // ✅ Worksheet metadata ga kalitlarni saqlash
-      worksheet.properties.outlineProperties = {
-        customColumnKeys: sortedKeys,
-      } as any;
+      // // ✅ Worksheet metadata ga kalitlarni saqlash
+      // worksheet.properties.outlineProperties = {
+      //   customColumnKeys: sortedKeys,
+      // } as any;
     }
 
     // ✅ TUZATILDI: Tartib bilan natijalarni olish
