@@ -275,6 +275,9 @@ export class TestAnswerService {
     // Natijalarni tartib bilan olish
     const columnKeys = this.getWorksheetColumnKeys(worksheet);
     const orderedResults = columnKeys.map((key) => results[key] ?? 0);
+    console.log("OrderedResults", orderedResults)
+    console.log("columnKeys", columnKeys)
+    
 
     // Row qo'shish
     worksheet

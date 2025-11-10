@@ -44,9 +44,7 @@ export class TestService {
   }
 
   async endTest(ctx: Context) {
-    console.log(ctx.callbackQuery!["data"])
     const testId = ctx.callbackQuery!["data"].split("_")[2];
-    console.log(testId)
     const test = await this.testRepository.findOne({
       where: { test_id: testId },
     });
