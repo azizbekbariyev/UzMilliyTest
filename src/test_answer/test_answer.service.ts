@@ -151,32 +151,32 @@ export class TestAnswerService {
 
     for (const userAns of body.answers) {
       let correct;
-      const normalize = (s?: string) =>
-        (s ?? "").toString().trim().toLowerCase();
-
+      console.log("Correct", correct)
       if (userAns.if_test) {
+        console.log("If test true", userAns.if_test)
         correct = testAnswers.find(
           (t) =>
-            t.test_number === Number(userAns.test_number) && t.if_test === true
+            t.test_number == userAns.test_number && t.if_test == true
         );
+
+        console.log("correct1", correct);
 
         if (correct) {
           const key = String(userAns.test_number);
           results[key] = userAns.answer === correct.option ? 1 : 0;
         }
       } else {
+        console.log("If test false", userAns.if_test)
         correct = testAnswers.find(
-          (t) =>
-            normalize(t.test_number_string) ===
-              normalize(String(userAns.test_number)) && t.if_test === false
+          (t) => t.test_number_string == userAns.test_number && t.if_test === false
         );
 
-        console.log("correct", correct);
+        console.log("correct2", correct);
 
         if (correct) {
           const key = String(userAns.test_number);
           results[key] =
-            normalize(userAns.answer) === normalize(correct.option) ? 1 : 0;
+            userAns.answer == correct.option ? 1 : 0;
         } else {
           console.log("Ochiq test topilmadi:", {
             userTestNumber: userAns.test_number,
