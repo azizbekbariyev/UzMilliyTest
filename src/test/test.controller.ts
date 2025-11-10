@@ -13,21 +13,6 @@ export class TestController {
     return this.testService.findOneTestWithScience(test_id);
   }
 
-  // 1️⃣ — ZIP fayl mavjudligini tekshirish va URL qaytarish
-  @Get('zip/:testId')
-  async getZipFile(@Param('testId') testId: string) {
-    const zipPath = join(process.cwd(), 'uploads', `${testId}.zip`);
-
-    if (!fs.existsSync(zipPath)) {
-      return { message: '❌ ZIP fayl topilmadi' };
-    }
-
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-    const fileUrl = `${baseUrl}/uploads/${testId}.zip`;
-
-    return { message: '✅ ZIP fayl tayyor', url: fileUrl };
-  }
-
   // 2️⃣ — ZIP faylni to‘g‘ridan-to‘g‘ri yuklab olish
   @Get('download/:testId')
   async downloadZip(@Param('testId') testId: string, @Res() res: Response) {
@@ -36,7 +21,7 @@ export class TestController {
     if (!fs.existsSync(zipPath)) {
       return res.status(404).json({ message: '❌ ZIP fayl topilmadi' });
     }
-
+ 
     res.download(zipPath, `${testId}.zip`, (err) => {
       if (err) {
         console.error('📛 ZIP yuborishda xatolik:', err);

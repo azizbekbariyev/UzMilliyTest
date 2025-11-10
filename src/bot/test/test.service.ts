@@ -78,7 +78,7 @@ export class TestService {
 
       if (fileSizeMB > 48) {
         // Juda katta bo‘lsa — link yuborish
-        const publicUrl = `https://bot.shamseducation.uz/uploads/${testId}.zip`;
+        const publicUrl = `https://bot.shamseducation.uz/api/test/download/${testId}`;
         await ctx.reply(
           `⚠️ Zip fayl hajmi ${fileSizeMB.toFixed(
             2
