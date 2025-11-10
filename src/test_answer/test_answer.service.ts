@@ -151,6 +151,7 @@ export class TestAnswerService {
 
     for (const userAns of body.answers) {
       let correct;
+      let resultsCount = 1;
       if (userAns.if_test) {
         console.log("If test true", userAns.if_test);
         correct = testAnswers.find(
@@ -174,7 +175,7 @@ export class TestAnswerService {
 
         if (correct) {
           const key = String(userAns.test_number);
-          results[key] = userAns.answer == correct.option ? 1 : 0;
+          results[resultsCount] = userAns.answer == correct.option ? 1 : 0;
         } else {
           console.log("Ochiq test topilmadi:", {
             userTestNumber: userAns.test_number,
@@ -188,6 +189,7 @@ export class TestAnswerService {
           });
         }
       }
+      resultsCount++;
     }
     console.log(results);
 
