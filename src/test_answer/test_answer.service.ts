@@ -151,9 +151,10 @@ export class TestAnswerService {
 
     for (const userAns of body.answers) {
       let correct;
+      const normalize = (s?: string) =>
+        (s ?? "").toString().trim().toLowerCase();
 
       if (userAns.if_test) {
-        // ✅ Yopiq test - raqam bilan solishtirish
         correct = testAnswers.find(
           (t) =>
             t.test_number === Number(userAns.test_number) && t.if_test === true
@@ -164,8 +165,6 @@ export class TestAnswerService {
           results[key] = userAns.answer === correct.option ? 1 : 0;
         }
       } else {
-        // ✅ Ochiq test - string bilan solishtirish
-        const normalize = (s: string) => s.trim().toLowerCase();
         correct = testAnswers.find(
           (t) =>
             normalize(t.test_number_string) ===
@@ -179,7 +178,6 @@ export class TestAnswerService {
           results[key] =
             normalize(userAns.answer) === normalize(correct.option) ? 1 : 0;
         } else {
-          // Debug uchun
           console.log("Ochiq test topilmadi:", {
             userTestNumber: userAns.test_number,
             availableTests: testAnswers
